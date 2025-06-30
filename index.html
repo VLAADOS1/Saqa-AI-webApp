@@ -271,14 +271,13 @@ const closeDrawModal=()=>drawModal.classList.remove('active');
 drawModal.addEventListener('click',e=>{if(e.target===drawModal)closeDrawModal();});
 
 /* ---------- отправка в бот ---------- */
-function sendToBot(payload){
-  const json=JSON.stringify(payload);
-  log('sendData len',json.length);
-  try{
-    if(window.Telegram?.WebApp) Telegram.WebApp.sendData(json);
-    else log('[dev] WebApp unavailable');
-  }catch(err){log('sendData error',err);}
+function sendToBot(payload) {
+  // ВСЕГДА превращаем в строку
+  const json = JSON.stringify(payload);
+  console.log('sendData =>', json);          // для отладки выводим строку
+  Telegram.WebApp.sendData(json);            // отправляем
 }
+
 
 /* ---------- режим рисования ---------- */
 function drawMode(imgSrc){
