@@ -119,8 +119,10 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 /* ---------- simple on-screen logger ---------- */
 #logOverlay{position:fixed;left:0;bottom:0;width:100%;max-height:45vh;
   overflow-y:auto;font-family:monospace;font-size:12px;line-height:1.4;
-  background:rgba(0,0,0,.9);color:#0f0;z-index:2000;padding:6px 8px;
-  display:none;border-top:2px solid var(--frame);}
+  background:rgba(0,0,0,.9);color:#0f0;z-index:2000;
+  padding:6px 8px;display:none;border-top:2px solid var(--frame);
+  pointer-events:none; /* <--- главное изменение */
+}
 #logOverlay div{white-space:pre-wrap}
 </style>
 </head>
@@ -205,19 +207,17 @@ function log(...msg){
   logOverlay.append(line);
   logOverlay.style.display = 'block';
   console.log(...msg);
-  /* Если мы в Telegram WebApp — покажем alert для наглядности */
   if (window.Telegram && Telegram.WebApp){
-    Telegram.WebApp.showAlert(msg.join(' ').slice(0,200)); // режем чтобы не вывалиться из лимита
+    Telegram.WebApp.showAlert(msg.join(' ').slice(0,200));
   }
 }
-/* глобальный перехват ошибок */
 window.addEventListener('error',e=>log('JS-Error:',e.message));
 window.addEventListener('unhandledrejection',e=>log('Promise-rej:',e.reason));
 
 /* ---------- Telegram WebApp init ---------- */
 if (window.Telegram && Telegram.WebApp){
   Telegram.WebApp.ready();
-  Telegram.WebApp.expand();      // в большинстве случаев полезно
+  Telegram.WebApp.expand();
   log('Telegram WebApp detected');
 }else{
   log('Standalone mode (Telegram.WebApp недоступен)');
@@ -235,10 +235,10 @@ const drawContent  = document.getElementById('drawContent');
 const photoInput   = document.getElementById('photoInput');
 
 /* ---------- глобальные переменные ---------- */
-let selectedOutfit = null;   // номер выбранного наряда
-let selectedGender = null;   // male | female
-let userPhoto      = null;   // base64
-let maskImage      = null;   // base64
+let selectedOutfit = null;
+let selectedGender = null;
+let userPhoto      = null;
+let maskImage      = null;
 
 /* ---------- нумерация карточек ---------- */
 document.querySelectorAll('#female .card').forEach((card,i)=> card.dataset.id = i+1 );
@@ -248,7 +248,7 @@ document.querySelectorAll('#male .card').forEach((card,i)=> card.dataset.id = i+
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('click',()=>{
     selectedOutfit = card.dataset.id;
-    selectedGender = card.closest('section').id; // female | male
+    selectedGender = card.closest('section').id;
     modalImg.src   = card.querySelector('img').src;
     modal.classList.add('active');
     log('Клик по карточке — outfit:',selectedOutfit,'gender:',selectedGender);
@@ -286,8 +286,6 @@ function sendToBot(payload){
     if (window.Telegram && Telegram.WebApp){
       log('Отправка через Telegram.WebApp.sendData, length:',json.length);
       Telegram.WebApp.sendData(json);
-      /* После sendData Telegram автоматически закроет WebView —
-         лог пишем чуть заранее */
     }else{
       log('[dev] Telegram.WebApp недоступен, вывод payload в консоль',json);
     }
@@ -350,12 +348,11 @@ function drawMode(imgSrc){
 
     drawContent.innerHTML = '<div class="instructions">Генерация начата…</div>';
 
-    /* для теста отправляем урезанный payload */
     const payload = {
       outfit: Number(selectedOutfit),
       gender: selectedGender,
-      photo : userPhoto?.slice(0,100) + '...', // только первые 100 символов, чтобы не переполнить
-      mask  : maskImage?.slice(0,100) + '...'
+      photo : userPhoto?.slice(0,100)+'...',
+      mask  : maskImage?.slice(0,100)+'...'
     };
     sendToBot(payload);
   });
