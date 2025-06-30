@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Каталог Saqa-AI</title>
+<title>Каталог Saqa-AI — debug</title>
 
+<!-- 👉 ФИКС: официальная библиотека Telegram Web Apps -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
@@ -18,10 +19,10 @@
   --brand:var(--frame);
   --text:#fff;
 }
+/* — базовая стилизация (как было) — */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{scrollbar-width:none;-ms-overflow-style:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
-
 body{
   font-family:'Inter',sans-serif;
   color:var(--text);
@@ -31,10 +32,9 @@ body{
 body::before{
   content:'';position:fixed;inset:12px;border:2px solid var(--frame);
   border-radius:24px;pointer-events:none;z-index:999;
-  box-shadow:
-    0 0 6px 1px rgba(13,187,147,.75),
-    0 0 14px 4px rgba(13,187,147,.45),
-    0 0 22px 10px rgba(13,187,147,.25);
+  box-shadow:0 0 6px 1px rgba(13,187,147,.75),
+             0 0 14px 4px rgba(13,187,147,.45),
+             0 0 22px 10px rgba(13,187,147,.25);
 }
 
 .frame-inner{height:calc(100vh - 24px);margin:12px;border-radius:24px;
@@ -105,25 +105,29 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 .draw-box{position:relative;width:100%}
 .draw-box img{width:100%;border-radius:16px}
 .draw-box canvas{position:absolute;top:0;left:0;border-radius:16px;touch-action:none}
-
-/* скрываем крестик ТОЛЬКО в модалке рисования */
-#drawModal .close{display:none;}
+#drawModal .close{display:none}
 
 /* tool-toggle */
-.tool-toggle{
-  position:absolute;top:10px;right:10px;width:44px;height:44px;
-  border-radius:50%;background:rgba(0,0,0,.35);
-  backdrop-filter:blur(4px);
-  border:2px solid rgba(255,255,255,.25);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:.3s;
-}
+.tool-toggle{position:absolute;top:10px;right:10px;width:44px;height:44px;
+  border-radius:50%;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);
+  border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:.3s;}
 .tool-toggle:hover{background:rgba(0,0,0,.5)}
 .tool-toggle svg{width:22px;height:22px;fill:#fff}
 
 /* ---------- gender sections ---------- */
 .gender-section{display:none}
 .gender-section.active{display:block}
+
+/* ---------- simple on-screen logger ---------- */
+#logOverlay{
+  position:fixed;left:0;bottom:0;width:100%;max-height:45vh;
+  overflow-y:auto;font-family:monospace;font-size:12px;line-height:1.4;
+  background:rgba(0,0,0,.9);color:#0f0;z-index:2000;
+  padding:6px 8px;display:none;border-top:2px solid var(--frame);
+  pointer-events:none;
+}
+#logOverlay div{white-space:pre-wrap}
 </style>
 </head>
 
@@ -184,7 +188,7 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
   </div>
 </div>
 
-<!-- ======== ОТДЕЛЬНАЯ МОДАЛКА РИСОВАНИЯ (без крестика) ======== -->
+<!-- ======== ОТДЕЛЬНАЯ МОДАЛКА РИСОВАНИЯ ======== -->
 <div class="modal" id="drawModal">
   <div class="modal-box">
     <div id="drawContent"></div>
@@ -193,13 +197,37 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 
 <input type="file" accept="image/*" id="photoInput" style="display:none"/>
 
+<!-- — лог-оверлей — -->
+<div id="logOverlay"></div>
+
 </div><!-- /.frame-inner -->
 
 <script>
-// ---------- Telegram WebApp init ----------
-if (window.Telegram && Telegram.WebApp) Telegram.WebApp.ready();
+/* ---------- простая система логирования ---------- */
+const logOverlay = document.getElementById('logOverlay');
+function log(...msg){
+  const line = document.createElement('div');
+  line.textContent = `[${new Date().toLocaleTimeString()}] ` + msg.join(' ');
+  logOverlay.append(line);
+  logOverlay.style.display = 'block';
+  console.log(...msg);
+  if (window.Telegram && Telegram.WebApp){
+    Telegram.WebApp.showAlert(msg.join(' ').slice(0,200));
+  }
+}
+window.addEventListener('error',e=>log('JS-Error:',e.message));
+window.addEventListener('unhandledrejection',e=>log('Promise-rej:',e.reason));
 
-// ---------- быстрый доступ к DOM ----------
+/* ---------- Telegram WebApp init ---------- */
+if (window.Telegram && Telegram.WebApp){
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+  log('Telegram WebApp detected');
+}else{
+  log('Standalone mode (Telegram.WebApp недоступен)');
+}
+
+/* ---------- быстрый доступ к DOM ---------- */
 const modal        = document.getElementById('modal');
 const modalImg     = document.getElementById('modalImg');
 const closeBtn     = document.getElementById('closeBtn');
@@ -210,70 +238,67 @@ const drawContent  = document.getElementById('drawContent');
 
 const photoInput   = document.getElementById('photoInput');
 
-// ---------- глобальные переменные ----------
-let selectedOutfit   = null;   // номер выбранного наряда
-let selectedGender   = null;   // male | female
-let userPhoto        = null;   // base64
-let maskImage        = null;   // base64
+/* ---------- глобальные переменные ---------- */
+let selectedOutfit = null;
+let selectedGender = null;
+let userPhoto      = null;
+let maskImage      = null;
 
-// ---------- нумерация карточек ----------
-document.querySelectorAll('#female .card').forEach((card,i)=>{
-  card.dataset.id = i + 1;
-});
-document.querySelectorAll('#male .card').forEach((card,i)=>{
-  card.dataset.id = i + 1;
-});
+/* ---------- нумерация карточек ---------- */
+document.querySelectorAll('#female .card').forEach((card,i)=> card.dataset.id = i+1 );
+document.querySelectorAll('#male .card').forEach((card,i)=> card.dataset.id = i+1 );
 
-// ---------- открытие модалки выбора ----------
+/* ---------- открытие модалки выбора ---------- */
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('click',()=>{
-    // фиксируем выбор
     selectedOutfit = card.dataset.id;
-    selectedGender = card.closest('section').id; // female | male
-
-    // показываем картинку
-    modalImg.src = card.querySelector('img').src;
+    selectedGender = card.closest('section').id;
+    modalImg.src   = card.querySelector('img').src;
     modal.classList.add('active');
+    log('Клик по карточке — outfit:',selectedOutfit,'gender:',selectedGender);
   });
 });
 
-// ---------- закрытие модалки выбора ----------
-const closeModal = () => modal.classList.remove('active');
+/* ---------- закрытие модалки выбора ---------- */
+const closeModal = ()=> modal.classList.remove('active');
 closeBtn.addEventListener('click',closeModal);
 modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
 
-// ---------- выбор пользовательского фото ----------
+/* ---------- выбор пользовательского фото ---------- */
 chooseBtn.addEventListener('click',()=>photoInput.click());
 photoInput.addEventListener('change',e=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ev =>{
-    userPhoto = ev.target.result;  // сохраняем фото
-    closeModal();                  // закрываем первую модалку
-    drawMode(userPhoto);           // открываем модалку рисования
+    userPhoto = ev.target.result;
+    log('Фото загружено, размер base64:',userPhoto.length);
+    closeModal();
+    drawMode(userPhoto);
   };
   reader.readAsDataURL(file);
 });
 
-// ---------- закрытие модалки рисования (по клику за пределами) ----------
-const closeDrawModal = () => drawModal.classList.remove('active');
+/* ---------- закрытие модалки рисования ---------- */
+const closeDrawModal = ()=> drawModal.classList.remove('active');
 drawModal.addEventListener('click',e=>{ if(e.target===drawModal) closeDrawModal(); });
 
-// ---------- отправка данных в бота ----------
+/* ---------- отправка данных в бота ---------- */
 function sendToBot(payload){
   try{
+    const json = JSON.stringify(payload);
     if (window.Telegram && Telegram.WebApp){
-      Telegram.WebApp.sendData(JSON.stringify(payload));
+      log('Отправка через Telegram.WebApp.sendData, length:',json.length);
+      Telegram.WebApp.sendData(json);
     }else{
-      console.log('[dev] Telegram.WebApp недоступен, данные:', payload);
+      log('[dev] Telegram.WebApp недоступен, вывод payload в консоль',json);
     }
   }catch(err){
-    console.error('Ошибка sendData',err);
+    log('Ошибка в sendToBot',err);
   }
 }
 
-// ---------- ОСНОВНОЙ РЕЖИМ РИСОВАНИЯ ----------
+/* ---------- ОСНОВНОЙ РЕЖИМ РИСОВАНИЯ ---------- */
 function drawMode(imgSrc){
   drawContent.innerHTML = '';
 
@@ -288,17 +313,17 @@ function drawMode(imgSrc){
   box.append(img,cv); drawContent.append(box);
 
   /* --- переключатель кисть/ластик --- */
-  const toolBtn = document.createElement('button');
-  toolBtn.className = 'tool-toggle';
+  const toolBtn = document.createElement('button'); toolBtn.className = 'tool-toggle';
   const icons = {
-    eraser:<svg viewBox="0 0 24 24"><path d="M16.24 3.56a2.5 2.5 0 0 1 3.54 0l.66.66a2.5 2.5 0 0 1 0 3.54l-9.19 9.19-4.24-4.24 9.23-9.15zm-10.95 8.45 4.24 4.24-3.9 3.9a2.5 2.5 0 0 1-3.54 0l-.66-.66a2.5 2.5 0 0 1 0-3.54l3.86-3.94zm5.66 7.07h8v2h-8z"/></svg>,
-    pencil:<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75l11.02-11.03-3.75-3.75L3 17.25zm14.81-10.12 2.06-2.06c.39-.39.39-1.02 0-1.41l-1.53-1.53a.996.996 0 0 0-1.41 0l-2.06 2.06 2.94 2.94z"/></svg>
+    eraser: `<svg viewBox="0 0 24 24"><path d="M16.24 3.56a2.5 2.5 0 0 1 3.54 0l.66.66a2.5 2.5 0 0 1 0 3.54l-9.19 9.19-4.24-4.24 9.23-9.15zm-10.95 8.45 4.24 4.24-3.9 3.9a2.5 2.5 0 0 1-3.54 0l-.66-.66a2.5 2.5 0 0 1 0-3.54l3.86-3.94zm5.66 7.07h8v2h-8z"/></svg>`,
+    pencil: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75l11.02-11.03-3.75-3.75L3 17.25zm14.81-10.12 2.06-2.06c.39-.39.39-1.02 0-1.41l-1.53-1.53a.996.996 0 0 0-1.41 0l-2.06 2.06 2.94 2.94z"/></svg>`
   };
   let isEraser = false;
   toolBtn.innerHTML = icons.eraser;
   toolBtn.addEventListener('click',()=>{
     isEraser = !isEraser;
     toolBtn.innerHTML = isEraser ? icons.pencil : icons.eraser;
+    log('Переключатель инструмента, eraser:',isEraser);
   });
   box.append(toolBtn);
 
@@ -317,34 +342,31 @@ function drawMode(imgSrc){
     const ctx = cv.getContext('2d');
     ctx.scale(dpr,dpr);
     initDrawing(cv,ctx);
+    log('Canvas инициализирован:',cv.width,'x',cv.height,'(px)');
   };
 
   /* ---------- генерация маски и отправка ---------- */
   done.addEventListener('click',()=>{
     maskImage = makeMask(cv);
+    log('mask base64 length:',maskImage.length);
 
-    // Пишем в модалке статус
     drawContent.innerHTML = '<div class="instructions">Генерация начата…</div>';
 
-    // Отправляем данные в бот
     const payload = {
       outfit: Number(selectedOutfit),
       gender: selectedGender,
-      photo : "2222",
-      mask  : "3333"
+      photo : userPhoto?.slice(0,100)+'...',
+      mask  : maskImage?.slice(0,100)+'...'
     };
     sendToBot(payload);
   });
 
-  // ---------- создание маски ----------
+  /* ---------- создание маски ---------- */
   function makeMask(sourceCanvas){
     const {width,height} = sourceCanvas;
     const sctx = sourceCanvas.getContext('2d');
     const imgData = sctx.getImageData(0,0,width,height);
     const data = imgData.data;
-
-    /* любые пиксели с непрозрачностью >0 делаем белыми,
-       остальные — чёрными */
     for(let i=0;i<data.length;i+=4){
       const alpha = data[i+3];
       if(alpha>0){
@@ -353,17 +375,15 @@ function drawMode(imgSrc){
         data[i]=0;   data[i+1]=0;   data[i+2]=0;   data[i+3]=255;
       }
     }
-
     const mask = document.createElement('canvas');
     mask.width = width; mask.height = height;
     mask.getContext('2d').putImageData(imgData,0,0);
-
     return mask.toDataURL('image/png');
   }
 
   /* ---------- собственно рисование ---------- */
   function initDrawing(cv,ctx){
-    const COLOR = 'rgba(128,0,255,0.5)';   // «фиолетовый маркер»
+    const COLOR = 'rgba(128,0,255,0.5)';
     const WIDTH = 40;
     ctx.lineWidth = WIDTH;
     ctx.lineCap   = 'round';
@@ -376,8 +396,8 @@ function drawMode(imgSrc){
       return {x:p.clientX-r.left, y:p.clientY-r.top};
     };
 
-    const start=e=>{e.preventDefault(); drawing=true; prev=pos(e);};
-    const move=e=>{
+    const start = e=>{e.preventDefault(); drawing=true; prev=pos(e);};
+    const move  = e=>{
       if(!drawing) return;
       e.preventDefault();
       const curr=pos(e);
@@ -388,7 +408,6 @@ function drawMode(imgSrc){
         ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
         ctx.restore();
       }else{
-        // стираем остатки, чтобы мазок был «твёрдым»
         ctx.save();
         ctx.globalCompositeOperation='destination-out';
         ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
@@ -417,15 +436,19 @@ function drawMode(imgSrc){
   drawModal.classList.add('active');
 }
 
-// ---------- переключатель полов ----------
+/* ---------- переключатель полов ---------- */
 const genderBtns = document.querySelectorAll('.gender-btn');
-const sections   = {female:document.getElementById('female'), male:document.getElementById('male')};
+const sections   = {
+  female:document.getElementById('female'),
+  male  :document.getElementById('male')
+};
 genderBtns.forEach(btn=>{
   btn.addEventListener('click',()=>{
     genderBtns.forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const t = btn.dataset.target;
-    Object.keys(sections).forEach(k=>sections[k].classList.toggle('active',k===t));
+    Object.keys(sections).forEach(k=> sections[k].classList.toggle('active',k===t));
+    log('Смена раздела на',t);
   });
 });
 </script>
