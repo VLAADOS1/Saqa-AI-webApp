@@ -272,12 +272,33 @@ drawModal.addEventListener('click',e=>{if(e.target===drawModal)closeDrawModal();
 
 /* ---------- отправка в бот ---------- */
 function sendToBot(payload){
-  const json=JSON.stringify(payload);
-  log('sendData len',json.length);
-  try{
-    if(window.Telegram?.WebApp) Telegram.WebApp.sendData(json);
-    else log('[dev] WebApp unavailable');
-  }catch(err){log('sendData error',err);}
+  const json = JSON.stringify(payload);
+  const len  = json.length;
+
+  // основной лог
+  log(`sendData → ${len} байт`);
+
+  // превышен лимит — сразу предупреждаем и выходим
+  if (len > 4096) {
+    log('⚠️ payload слишком большой, Telegram не примет');
+    console.warn('sendData aborted: payload > 4096 bytes', payload);
+    return;
+  }
+
+  // отправка
+  try {
+    if (window.Telegram?.WebApp) {
+      Telegram.WebApp.sendData(json);
+      log('✔️ sendData отправлен');
+    } else {
+      // в браузере/дев-режиме — просто выводим первые 300 символов
+      log('[dev] WebApp недоступен, payload (crop):', json.slice(0, 300) + (len > 300 ? '…' : ''));
+      console.debug('payload:', payload);
+    }
+  } catch (err) {
+    log('❌ sendData error:', err.message || err);
+    console.error(err);
+  }
 }
 
 /* ---------- режим рисования ---------- */
