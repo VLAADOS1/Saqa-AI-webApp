@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Каталог Saqa-AI</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+
+<!-- Telegram Web-App API -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+:root{
+  --frame:rgb(13,187,147);
+  --bg-1:#000;
+  --bg-2:#0e0e11;
+  --accent:#2e90ff;
+  --brand:var(--frame);
+  --text:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
+
+body{
+  font-family:'Inter',sans-serif;
+  color:var(--text);
+  background:linear-gradient(160deg,#000 0%,#151515 100%);
+  min-height:100vh;overflow:hidden;position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:12px;border:2px solid var(--frame);
+  border-radius:24px;pointer-events:none;z-index:999;
+  box-shadow:
+    0 0 6px 1px rgba(13,187,147,.75),
+    0 0 14px 4px rgba(13,187,147,.45),
+    0 0 22px 10px rgba(13,187,147,.25);
+}
+
+.frame-inner{height:calc(100vh - 24px);margin:12px;border-radius:24px;
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+
+.header{text-align:center;padding:28px 20px 12px}
+.brand{display:flex;justify-content:center;align-items:center;margin-bottom:4px}
+.brand img{height:40px;width:auto;display:block}
+
+.switch{margin-top:18px;display:flex;justify-content:center;gap:10px}
+.switch button{
+  flex:0 0 110px;padding:10px 0;font-size:15px;font-weight:600;
+  border-radius:30px;border:2px solid var(--brand);background:transparent;
+  color:var(--brand);cursor:pointer;transition:.3s;
+}
+.switch button.active{background:var(--brand);color:#000}
+
+h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
+
+.carousel{
+  display:flex;gap:14px;padding:0 20px 8px;overflow-x:auto;
+  scroll-snap-type:x mandatory;-ms-overflow-style:none;scrollbar-width:none
+}
+.carousel::-webkit-scrollbar{display:none}
+
+.card{
+  position:relative;flex:0 0 auto;scroll-snap-align:center;
+  width:clamp(96px,34vw,136px);aspect-ratio:2/3;
+  background:var(--bg-2);border-radius:18px;overflow:hidden;
+  cursor:pointer;transition:transform .35s cubic-bezier(.2,.6,.3,1);
+}
+.card img{width:100%;height:100%;object-fit:cover}
+.card::after{
+  content:'';position:absolute;inset:0;background:rgba(0,0,0,.3);
+  opacity:0;transition:opacity .35s;pointer-events:none;
+}
+.card:hover{transform:scale(1.05)}
+.card:hover::after{opacity:1}
+
+.modal{
+  position:fixed;inset:0;display:flex;justify-content:center;align-items:center;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;transition:.35s;z-index:998;padding:20px;
+}
+.modal.active{opacity:1;visibility:visible}
+
+.modal-box{
+  position:relative;background:var(--bg-2);border-radius:22px;
+  padding:20px;max-width:600px;width:100%;display:flex;
+  flex-direction:column;align-items:center;gap:20px;
+}
+.close{position:absolute;top:22px;right:26px;font-size:28px;font-weight:600;
+  color:#fff;cursor:pointer}
+.modal-box img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:16px}
+
+.btn{
+  width:100%;padding:14px 28px;background:var(--accent);border:none;
+  border-radius:10px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;
+  transition:background .3s;
+}
+.btn:hover{background:#1877ff}
+
+/* ---------- draw-mode additions ---------- */
+.instructions{
+  font-size:17px;font-weight:600;color:var(--brand);text-align:center;
+  margin-bottom:12px;user-select:none;
+}
+.draw-box{position:relative;width:100%}
+.draw-box img{width:100%;border-radius:16px}
+.draw-box canvas{position:absolute;top:0;left:0;border-radius:16px;touch-action:none}
+
+/* скрываем крестик ТОЛЬКО в модалке рисования */
+#drawModal .close{display:none;}
+
+/* tool-toggle */
+.tool-toggle{
+  position:absolute;top:10px;right:10px;width:44px;height:44px;
+  border-radius:50%;background:rgba(0,0,0,.35);
+  backdrop-filter:blur(4px);
+  border:2px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.3s;
+}
+.tool-toggle:hover{background:rgba(0,0,0,.5)}
+.tool-toggle svg{width:22px;height:22px;fill:#fff}
+
+/* ---------- gender sections ---------- */
+.gender-section{display:none}
+.gender-section.active{display:block}
+</style>
+</head>
+
+<body>
+<div class="frame-inner">
+
+<header class="header">
+  <div class="brand">
+    <img src="https://i.postimg.cc/ZRt8Kz5c/d99041e4-02c1-4b6c-bb6a-eb7c6a595d10.png" alt="Saqa AI">
+  </div>
+  <div class="switch">
+    <button class="gender-btn active" data-target="female">Женское</button>
+    <button class="gender-btn" data-target="male">Мужское</button>
+  </div>
+</header>
+
+<!-- ======== ЖЕНСКАЯ КАТЕГОРИЯ ======== -->
+<section id="female" class="gender-section active">
+  <h2>Костюмы</h2>
+  <div class="carousel">
+    <div class="card"><img src="https://i.postimg.cc/Qdypmpm9/Chat-GPT-Image-30-2025-15-28-18.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/QxvRnxDf/Chat-GPT-Image-30-2025-15-42-10.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/BQ7zPZtq/Chat-GPT-Image-30-2025-15-48-19.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/Df8YGJ48/Chat-GPT-Image-30-2025-15-49-04.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/gJfjNLzG/Chat-GPT-Image-30-2025-15-55-41.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/CxgmJDg7/Chat-GPT-Image-30-2025-16-20-31.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/SN1k0ygw/Chat-GPT-Image-30-2025-16-25-28.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/W10WG8qX/Chat-GPT-Image-30-2025-16-25-54.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/L8V7dv4h/Chat-GPT-Image-30-2025-16-26-17.png" alt=""></div>
+  </div>
+
+  <h2>Трикотаж</h2>
+  <div class="carousel">
+    <div class="card"><img src="https://i.postimg.cc/JzLJNNnT/image.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/JzLJNNnT/image.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/JzLJNNnT/image.png" alt=""></div>
+  </div>
+</section>
+
+<!-- ======== МУЖСКАЯ КАТЕГОРИЯ ======== -->
+<section id="male" class="gender-section">
+  <h2>Толстовки</h2>
+  <div class="carousel">
+    <div class="card"><img src="https://i.postimg.cc/JzLJNNnT/image.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/JzLJNNnT/image.png" alt=""></div>
+    <div class="card"><img src="https://i.postimg.cc/JzLJNNnT/image.png" alt=""></div>
+  </div>
+</section>
+
+<!-- ======== МОДАЛКА ВЫБОРА ОДЕЖДЫ ======== -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <span class="close" id="closeBtn">&times;</span>
+    <div id="modalContent">
+      <img id="modalImg" src="" alt="">
+      <button class="btn" id="chooseBtn">Выбрать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== ОТДЕЛЬНАЯ МОДАЛКА РИСОВАНИЯ (без крестика) ======== -->
+<div class="modal" id="drawModal">
+  <div class="modal-box">
+    <div id="drawContent"></div>
+  </div>
+</div>
+
+<input type="file" accept="image/*" id="photoInput" style="display:none"/>
+
+</div><!-- /.frame-inner -->
+
+<script>
+// ---------- Telegram Web-App init ----------
+const tg          = window.Telegram && window.Telegram.WebApp;
+if(tg){
+  tg.ready();
+  tg.expand();          // делаем Web-App в полный размер
+}
+
+// ---------- глобальные переменные для sendData ----------
+let selectedOutfitId = null;
+let selectedGender   = null;
+let userPhoto        = null;   // dataURL загруженного фото
+
+// ---------- проставляем id нарядам ----------
+document.addEventListener('DOMContentLoaded',()=>{
+  const femaleCards = document.querySelectorAll('#female .card');
+  femaleCards.forEach((card,i)=>{
+    card.dataset.outfitId = i+1;
+    card.dataset.gender   = 'female';
+  });
+
+  const maleCards = document.querySelectorAll('#male .card');
+  maleCards.forEach((card,i)=>{
+    card.dataset.outfitId = i+1;
+    card.dataset.gender   = 'male';
+  });
+});
+
+// ---------- быстрый доступ к DOM ----------
+const modal        = document.getElementById('modal');
+const modalImg     = document.getElementById('modalImg');
+const closeBtn     = document.getElementById('closeBtn');
+const chooseBtn    = document.getElementById('chooseBtn');
+
+const drawModal    = document.getElementById('drawModal');
+const drawContent  = document.getElementById('drawContent');
+
+const photoInput   = document.getElementById('photoInput');
+
+// ----- открытие модалки выбора -----
+document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    selectedOutfitId = card.dataset.outfitId;
+    selectedGender   = card.dataset.gender;
+    modalImg.src     = card.querySelector('img').src;
+    modal.classList.add('active');
+  });
+});
+
+// ----- закрытие модалки выбора -----
+const closeModal = () => modal.classList.remove('active');
+closeBtn.addEventListener('click',closeModal);
+modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+
+// ----- выбор пользовательского фото -----
+chooseBtn.addEventListener('click',()=>photoInput.click());
+photoInput.addEventListener('change',e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev =>{
+    userPhoto   = ev.target.result;  // сохраняем фото
+    closeModal();                    // закрываем первую модалку
+    drawMode(userPhoto);             // открываем модалку рисования
+  };
+  reader.readAsDataURL(file);
+});
+
+// ----- закрытие модалки рисования (по клику за пределами) -----
+const closeDrawModal = () => drawModal.classList.remove('active');
+drawModal.addEventListener('click',e=>{ if(e.target===drawModal) closeDrawModal(); });
+
+// ---------- ОСНОВНОЙ РЕЖИМ РИСОВАНИЯ ----------
+function drawMode(imgSrc){
+  drawContent.innerHTML = '';
+
+  const info = document.createElement('div');
+  info.className = 'instructions';
+  info.textContent = 'Выделите область одежды, которую хотите заменить.';
+  drawContent.append(info);
+
+  const box  = document.createElement('div'); box.className = 'draw-box';
+  const img  = document.createElement('img'); img.src = imgSrc;
+  const cv   = document.createElement('canvas');
+  box.append(img,cv); drawContent.append(box);
+
+  /* --- переключатель кисть/ластик --- */
+  const toolBtn = document.createElement('button');
+  toolBtn.className = 'tool-toggle';
+  const icons = {
+    eraser:`<svg viewBox="0 0 24 24"><path d="M16.24 3.56a2.5 2.5 0 0 1 3.54 0l.66.66a2.5 2.5 0 0 1 0 3.54l-9.19 9.19-4.24-4.24 9.23-9.15zm-10.95 8.45 4.24 4.24-3.9 3.9a2.5 2.5 0 0 1-3.54 0l-.66-.66a2.5 2.5 0 0 1 0-3.54l3.86-3.94zm5.66 7.07h8v2h-8z"/></svg>`,
+    pencil:`<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75l11.02-11.03-3.75-3.75L3 17.25zm14.81-10.12 2.06-2.06c.39-.39.39-1.02 0-1.41l-1.53-1.53a.996.996 0 0 0-1.41 0l-2.06 2.06 2.94 2.94z"/></svg>`
+  };
+  let isEraser = false;
+  toolBtn.innerHTML = icons.eraser;
+  toolBtn.addEventListener('click',()=>{
+    isEraser = !isEraser;
+    toolBtn.innerHTML = isEraser ? icons.pencil : icons.eraser;
+  });
+  box.append(toolBtn);
+
+  const done = document.createElement('button');
+  done.textContent = 'Готово';
+  done.className = 'btn';
+  done.style.marginTop = '16px';
+  drawContent.append(done);
+
+  img.onload = ()=>{
+    const dpr = window.devicePixelRatio || 1;
+    cv.width  = img.clientWidth * dpr;
+    cv.height = img.clientHeight * dpr;
+    cv.style.width  = img.clientWidth  + 'px';
+    cv.style.height = img.clientHeight + 'px';
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr,dpr);
+    initDrawing(cv,ctx);
+  };
+
+  /* ---------- генерация маски + отправка в Telegram ---------- */
+  done.addEventListener('click',()=>{
+    const maskUrl = makeMask(cv);
+
+    /* -------- отправляем данные в Web-App -------- */
+    if(tg && selectedOutfitId && selectedGender && userPhoto && maskUrl){
+      const payload = {
+        gender   : selectedGender,
+        outfitId : Number(selectedOutfitId),
+        photo    : userPhoto,   // base64-dataURL
+        mask     : maskUrl      // base64-dataURL
+      };
+      tg.sendData(JSON.stringify(payload));
+      // при желании можно закрыть Web-App:
+      // tg.close();
+    }
+
+    /* -------- показываем маску пользователю -------- */
+    drawContent.innerHTML = '';
+    const maskImg = document.createElement('img');
+    maskImg.src   = maskUrl;
+    maskImg.style.width = '100%';
+    maskImg.alt   = 'Сгенерированная маска';
+    drawContent.append(maskImg);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Закрыть';
+    closeBtn.className = 'btn';
+    closeBtn.style.marginTop = '16px';
+    closeBtn.addEventListener('click',closeDrawModal);
+    drawContent.append(closeBtn);
+  });
+
+  function makeMask(sourceCanvas){
+    const {width,height} = sourceCanvas;
+    const sctx = sourceCanvas.getContext('2d');
+    const imgData = sctx.getImageData(0,0,width,height);
+    const data = imgData.data;
+
+    /* любые пиксели с непрозрачностью >0 делаем белыми, остальные — чёрными */
+    for(let i=0;i<data.length;i+=4){
+      const alpha = data[i+3];
+      if(alpha>0){
+        data[i]=255; data[i+1]=255; data[i+2]=255; data[i+3]=255;
+      }else{
+        data[i]=0;   data[i+1]=0;   data[i+2]=0;   data[i+3]=255;
+      }
+    }
+
+    const mask = document.createElement('canvas');
+    mask.width = width; mask.height = height;
+    mask.getContext('2d').putImageData(imgData,0,0);
+
+    return mask.toDataURL('image/png');
+  }
+
+  /* ---------- собственно рисование ---------- */
+  function initDrawing(cv,ctx){
+    const COLOR = 'rgba(128,0,255,0.5)';   // «фиолетовый маркер»
+    const WIDTH = 40;
+    ctx.lineWidth = WIDTH;
+    ctx.lineCap   = 'round';
+    ctx.lineJoin  = 'round';
+
+    let drawing = false, prev = null;
+    const pos = e=>{
+      const r=cv.getBoundingClientRect();
+      const p=e.touches?e.touches[0]:e;
+      return {x:p.clientX-r.left, y:p.clientY-r.top};
+    };
+
+    const start=e=>{e.preventDefault(); drawing=true; prev=pos(e);};
+    const move=e=>{
+      if(!drawing) return;
+      e.preventDefault();
+      const curr=pos(e);
+
+      if(isEraser){
+        ctx.save();
+        ctx.globalCompositeOperation='destination-out';
+        ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
+        ctx.restore();
+      }else{
+        ctx.save();
+        ctx.globalCompositeOperation='destination-out';
+        ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation='source-over';
+        ctx.strokeStyle = COLOR;
+        ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
+        ctx.restore();
+      }
+      prev=curr;
+    };
+    const stop = ()=>{drawing=false; prev=null;};
+
+    cv.addEventListener('mousedown',start);
+    cv.addEventListener('mousemove',move );
+    window.addEventListener('mouseup',stop);
+    cv.addEventListener('mouseout',stop);
+
+    cv.addEventListener('touchstart',start,{passive:false});
+    cv.addEventListener('touchmove' ,move,{passive:false});
+    window.addEventListener('touchend',stop);
+  }
+
+  drawModal.classList.add('active');
+}
+
+// ---------- переключатель полов ----------
+const genderBtns = document.querySelectorAll('.gender-btn');
+const sections   = {female:document.getElementById('female'), male:document.getElementById('male')};
+genderBtns.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    genderBtns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const t = btn.dataset.target;
+    Object.keys(sections).forEach(k=>sections[k].classList.toggle('active',k===t));
+  });
+});
+</script>
+</body>
+</html>
