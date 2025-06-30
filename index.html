@@ -2,13 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>Каталог Saqa-AI</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
-
-<!-- Telegram Web-App API -->
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 :root{
@@ -18,16 +15,24 @@
   --accent:#2e90ff;
   --brand:var(--frame);
   --text:#fff;
+
+  /* динамическая единица, выставляется JS-скриптом ниже */
+  --vh:1vh;
 }
+
+/* ---------- базовые сбросы ---------- */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{scrollbar-width:none;-ms-overflow-style:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
 
+/* ---------- базовая раскладка ---------- */
 body{
   font-family:'Inter',sans-serif;
   color:var(--text);
   background:linear-gradient(160deg,#000 0%,#151515 100%);
-  min-height:100vh;overflow:hidden;position:relative;
+  /* вместо 100vh используем вычисленную величину, чтобы учесть тулбар Telegram */
+  min-height:calc(var(--vh) * 100);
+  overflow:hidden;position:relative;
 }
 body::before{
   content:'';position:fixed;inset:12px;border:2px solid var(--frame);
@@ -38,13 +43,19 @@ body::before{
     0 0 22px 10px rgba(13,187,147,.25);
 }
 
-.frame-inner{height:calc(100vh - 24px);margin:12px;border-radius:24px;
-  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+/* ---------- основная прокручиваемая область ---------- */
+.frame-inner{
+  height:calc(var(--vh) * 100 - 24px); /* раньше было 100vh */
+  margin:12px;border-radius:24px;
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch
+}
 
+/* ---------- шапка ---------- */
 .header{text-align:center;padding:28px 20px 12px}
 .brand{display:flex;justify-content:center;align-items:center;margin-bottom:4px}
 .brand img{height:40px;width:auto;display:block}
 
+/* ---------- переключатель пола ---------- */
 .switch{margin-top:18px;display:flex;justify-content:center;gap:10px}
 .switch button{
   flex:0 0 110px;padding:10px 0;font-size:15px;font-weight:600;
@@ -53,14 +64,17 @@ body::before{
 }
 .switch button.active{background:var(--brand);color:#000}
 
+/* ---------- заголовки блоков ---------- */
 h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 
+/* ---------- горизонтальный список карточек ---------- */
 .carousel{
   display:flex;gap:14px;padding:0 20px 8px;overflow-x:auto;
   scroll-snap-type:x mandatory;-ms-overflow-style:none;scrollbar-width:none
 }
 .carousel::-webkit-scrollbar{display:none}
 
+/* ---------- карточка товара ---------- */
 .card{
   position:relative;flex:0 0 auto;scroll-snap-align:center;
   width:clamp(96px,34vw,136px);aspect-ratio:2/3;
@@ -75,22 +89,24 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 .card:hover{transform:scale(1.05)}
 .card:hover::after{opacity:1}
 
+/* ---------- общая модалка выбора ---------- */
 .modal{
   position:fixed;inset:0;display:flex;justify-content:center;align-items:center;
   background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
   opacity:0;visibility:hidden;transition:.35s;z-index:998;padding:20px;
 }
 .modal.active{opacity:1;visibility:visible}
-
 .modal-box{
   position:relative;background:var(--bg-2);border-radius:22px;
-  padding:20px;max-width:600px;width:100%;display:flex;
-  flex-direction:column;align-items:center;gap:20px;
+  padding:20px;max-width:600px;width:100%;
+  display:flex;flex-direction:column;align-items:center;gap:20px;
+  max-height:90vh;overflow-y:auto;              /* чтобы не вылезала за экран */
 }
 .close{position:absolute;top:22px;right:26px;font-size:28px;font-weight:600;
   color:#fff;cursor:pointer}
 .modal-box img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:16px}
 
+/* ---------- общие кнопки ---------- */
 .btn{
   width:100%;padding:14px 28px;background:var(--accent);border:none;
   border-radius:10px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;
@@ -197,32 +213,26 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 </div><!-- /.frame-inner -->
 
 <script>
-// ---------- Telegram Web-App init ----------
-const tg          = window.Telegram && window.Telegram.WebApp;
-if(tg){
-  tg.ready();
-  tg.expand();          // делаем Web-App в полный размер
+// ---------- Telegram WebApp init ----------
+if (window.Telegram && Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();          // разворачиваем на всю высоту
 }
 
-// ---------- глобальные переменные для sendData ----------
-let selectedOutfitId = null;
-let selectedGender   = null;
-let userPhoto        = null;   // dataURL загруженного фото
+// ---------- utility: корректная высота под тулбары и g-gesture ----------
+(function fixViewportHeight(){
+  function setVH(){
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+  setVH();
+  window.addEventListener('resize', setVH);
 
-// ---------- проставляем id нарядам ----------
-document.addEventListener('DOMContentLoaded',()=>{
-  const femaleCards = document.querySelectorAll('#female .card');
-  femaleCards.forEach((card,i)=>{
-    card.dataset.outfitId = i+1;
-    card.dataset.gender   = 'female';
-  });
-
-  const maleCards = document.querySelectorAll('#male .card');
-  maleCards.forEach((card,i)=>{
-    card.dataset.outfitId = i+1;
-    card.dataset.gender   = 'male';
-  });
-});
+  /* ловим изменение viewport’а в Telegram (например, когда прячется системный бар) */
+  if (window.Telegram && Telegram.WebApp) {
+    Telegram.WebApp.onEvent('viewportChanged', setVH);
+  }
+})();
 
 // ---------- быстрый доступ к DOM ----------
 const modal        = document.getElementById('modal');
@@ -235,38 +245,68 @@ const drawContent  = document.getElementById('drawContent');
 
 const photoInput   = document.getElementById('photoInput');
 
-// ----- открытие модалки выбора -----
+// ---------- глобальные переменные ----------
+let selectedOutfit   = null;   // номер выбранного наряда
+let selectedGender   = null;   // male | female
+let userPhoto        = null;   // base64
+let maskImage        = null;   // base64
+
+// ---------- нумерация карточек ----------
+document.querySelectorAll('#female .card').forEach((card,i)=>{
+  card.dataset.id = i + 1;
+});
+document.querySelectorAll('#male .card').forEach((card,i)=>{
+  card.dataset.id = i + 1;
+});
+
+// ---------- открытие модалки выбора ----------
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('click',()=>{
-    selectedOutfitId = card.dataset.outfitId;
-    selectedGender   = card.dataset.gender;
-    modalImg.src     = card.querySelector('img').src;
+    // фиксируем выбор
+    selectedOutfit = card.dataset.id;
+    selectedGender = card.closest('section').id; // female | male
+
+    // показываем картинку
+    modalImg.src = card.querySelector('img').src;
     modal.classList.add('active');
   });
 });
 
-// ----- закрытие модалки выбора -----
+// ---------- закрытие модалки выбора ----------
 const closeModal = () => modal.classList.remove('active');
 closeBtn.addEventListener('click',closeModal);
 modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
 
-// ----- выбор пользовательского фото -----
+// ---------- выбор пользовательского фото ----------
 chooseBtn.addEventListener('click',()=>photoInput.click());
 photoInput.addEventListener('change',e=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ev =>{
-    userPhoto   = ev.target.result;  // сохраняем фото
-    closeModal();                    // закрываем первую модалку
-    drawMode(userPhoto);             // открываем модалку рисования
+    userPhoto = ev.target.result;  // сохраняем фото
+    closeModal();                  // закрываем первую модалку
+    drawMode(userPhoto);           // открываем модалку рисования
   };
   reader.readAsDataURL(file);
 });
 
-// ----- закрытие модалки рисования (по клику за пределами) -----
+// ---------- закрытие модалки рисования (по клику за пределами) ----------
 const closeDrawModal = () => drawModal.classList.remove('active');
 drawModal.addEventListener('click',e=>{ if(e.target===drawModal) closeDrawModal(); });
+
+// ---------- отправка данных в бота ----------
+function sendToBot(payload){
+  try{
+    if (window.Telegram && Telegram.WebApp){
+      Telegram.WebApp.sendData(JSON.stringify(payload));
+    }else{
+      console.log('[dev] Telegram.WebApp недоступен, данные:', payload);
+    }
+  }catch(err){
+    console.error('Ошибка sendData',err);
+  }
+}
 
 // ---------- ОСНОВНОЙ РЕЖИМ РИСОВАНИЯ ----------
 function drawMode(imgSrc){
@@ -314,46 +354,32 @@ function drawMode(imgSrc){
     initDrawing(cv,ctx);
   };
 
-  /* ---------- генерация маски + отправка в Telegram ---------- */
+  /* ---------- генерация маски и отправка ---------- */
   done.addEventListener('click',()=>{
-    const maskUrl = makeMask(cv);
+    maskImage = makeMask(cv);
 
-    /* -------- отправляем данные в Web-App -------- */
-    if(tg && selectedOutfitId && selectedGender && userPhoto && maskUrl){
-      const payload = {
-        gender   : selectedGender,
-        outfitId : Number(selectedOutfitId),
-        photo    : userPhoto,   // base64-dataURL
-        mask     : maskUrl      // base64-dataURL
-      };
-      tg.sendData(JSON.stringify(payload));
-      // при желании можно закрыть Web-App:
-      // tg.close();
-    }
+    // Пишем в модалке статус
+    drawContent.innerHTML = '<div class="instructions">Генерация начата…</div>';
 
-    /* -------- показываем маску пользователю -------- */
-    drawContent.innerHTML = '';
-    const maskImg = document.createElement('img');
-    maskImg.src   = maskUrl;
-    maskImg.style.width = '100%';
-    maskImg.alt   = 'Сгенерированная маска';
-    drawContent.append(maskImg);
-
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Закрыть';
-    closeBtn.className = 'btn';
-    closeBtn.style.marginTop = '16px';
-    closeBtn.addEventListener('click',closeDrawModal);
-    drawContent.append(closeBtn);
+    // Отправляем данные в бот
+    const payload = {
+      outfit: Number(selectedOutfit),
+      gender: selectedGender,
+      photo : userPhoto,
+      mask  : maskImage
+    };
+    sendToBot(payload);
   });
 
+  // ---------- создание маски ----------
   function makeMask(sourceCanvas){
     const {width,height} = sourceCanvas;
     const sctx = sourceCanvas.getContext('2d');
     const imgData = sctx.getImageData(0,0,width,height);
     const data = imgData.data;
 
-    /* любые пиксели с непрозрачностью >0 делаем белыми, остальные — чёрными */
+    /* любые пиксели с непрозрачностью >0 делаем белыми,
+       остальные — чёрными */
     for(let i=0;i<data.length;i+=4){
       const alpha = data[i+3];
       if(alpha>0){
@@ -397,6 +423,7 @@ function drawMode(imgSrc){
         ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
         ctx.restore();
       }else{
+        // стираем остатки, чтобы мазок был «твёрдым»
         ctx.save();
         ctx.globalCompositeOperation='destination-out';
         ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
