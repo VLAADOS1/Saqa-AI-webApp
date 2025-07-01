@@ -4,139 +4,56 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Каталог Saqa-AI</title>
-
-<!-- Telegram Web-Apps SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
-
 <style>
-:root{
-  --frame:rgb(13,187,147);
-  --bg-1:#000;
-  --bg-2:#0e0e11;
-  --accent:#2e90ff;
-  --brand:var(--frame);
-  --text:#fff;
-}
-
+/* ----- ВЕСЬ исходный CSS без изменений ----- */
+:root{--frame:rgb(13,187,147);--bg-1:#000;--bg-2:#0e0e11;--accent:#2e90ff;--brand:var(--frame);--text:#fff;}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{scrollbar-width:none;-ms-overflow-style:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
-
-body{
-  font-family:'Inter',sans-serif;
-  color:var(--text);
-  background:linear-gradient(160deg,#000 0%,#151515 100%);
-  min-height:100vh;overflow:hidden;position:relative;
-}
-body::before{
-  content:'';position:fixed;inset:12px;border:2px solid var(--frame);
-  border-radius:24px;pointer-events:none;z-index:999;
-  box-shadow:0 0 6px 1px rgba(13,187,147,.75),
-             0 0 14px 4px rgba(13,187,147,.45),
-             0 0 22px 10px rgba(13,187,147,.25);
-}
-
-.frame-inner{height:calc(100vh - 24px);margin:12px;border-radius:24px;
-  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-
-.header{text-align:center;padding:28px 20px 12px}
-.brand{display:flex;justify-content:center;align-items:center;margin-bottom:4px}
+body{font-family:'Inter',sans-serif;color:var(--text);background:linear-gradient(160deg,#000 0%,#151515 100%);min-height:100vh;overflow:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:12px;border:2px solid var(--frame);border-radius:24px;pointer-events:none;z-index:999;box-shadow:0 0 6px 1px rgba(13,187,147,.75),0 0 14px 4px rgba(13,187,147,.45),0 0 22px 10px rgba(13,187,147,.25);}
+.frame-inner{height:calc(100vh - 24px);margin:12px;border-radius:24px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.header{text-align:center;padding:28px 20px 12px}.brand{display:flex;justify-content:center;align-items:center;margin-bottom:4px}
 .brand img{height:40px;width:auto;display:block}
-
 .switch{margin-top:18px;display:flex;justify-content:center;gap:10px}
-.switch button{
-  flex:0 0 110px;padding:10px 0;font-size:15px;font-weight:600;
-  border-radius:30px;border:2px solid var(--brand);background:transparent;
-  color:var(--brand);cursor:pointer;transition:.3s;
-}
+.switch button{flex:0 0 110px;padding:10px 0;font-size:15px;font-weight:600;border-radius:30px;border:2px solid var(--brand);background:transparent;color:var(--brand);cursor:pointer;transition:.3s;}
 .switch button.active{background:var(--brand);color:#000}
-
 h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
-
-.carousel{
-  display:flex;gap:14px;padding:0 20px 8px;overflow-x:auto;
-  scroll-snap-type:x mandatory;-ms-overflow-style:none;scrollbar-width:none
-}
+.carousel{display:flex;gap:14px;padding:0 20px 8px;overflow-x:auto;scroll-snap-type:x mandatory;-ms-overflow-style:none;scrollbar-width:none}
 .carousel::-webkit-scrollbar{display:none}
-
-.card{
-  position:relative;flex:0 0 auto;scroll-snap-align:center;
-  width:clamp(96px,34vw,136px);aspect-ratio:2/3;
-  background:var(--bg-2);border-radius:18px;overflow:hidden;
-  cursor:pointer;transition:transform .35s cubic-bezier(.2,.6,.3,1);
-}
+.card{position:relative;flex:0 0 auto;scroll-snap-align:center;width:clamp(96px,34vw,136px);aspect-ratio:2/3;background:var(--bg-2);border-radius:18px;overflow:hidden;cursor:pointer;transition:transform .35s cubic-bezier(.2,.6,.3,1);}
 .card img{width:100%;height:100%;object-fit:cover}
-.card::after{
-  content:'';position:absolute;inset:0;background:rgba(0,0,0,.3);
-  opacity:0;transition:opacity .35s;pointer-events:none;
-}
-.card:hover{transform:scale(1.05)}
-.card:hover::after{opacity:1}
-
-.modal{
-  position:fixed;inset:0;display:flex;justify-content:center;align-items:center;
-  background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
-  opacity:0;visibility:hidden;transition:.35s;z-index:998;padding:20px;
-}
+.card::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.3);opacity:0;transition:opacity .35s;pointer-events:none;}
+.card:hover{transform:scale(1.05)}.card:hover::after{opacity:1}
+.modal{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:.35s;z-index:998;padding:20px;}
 .modal.active{opacity:1;visibility:visible}
-
-.modal-box{
-  position:relative;background:var(--bg-2);border-radius:22px;
-  padding:20px;max-width:600px;width:100%;display:flex;
-  flex-direction:column;align-items:center;gap:20px;
-}
-.close{position:absolute;top:22px;right:26px;font-size:28px;font-weight:600;
-  color:#fff;cursor:pointer}
+.modal-box{position:relative;background:var(--bg-2);border-radius:22px;padding:20px;max-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.close{position:absolute;top:22px;right:26px;font-size:28px;font-weight:600;color:#fff;cursor:pointer}
 .modal-box img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:16px}
-
-.btn{
-  width:100%;padding:14px 28px;background:var(--accent);border:none;
-  border-radius:10px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;
-  transition:background .3s;
-}
+.btn{width:100%;padding:14px 28px;background:var(--accent);border:none;border-radius:10px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;transition:background .3s;}
 .btn:hover{background:#1877ff}
-
-/* ---------- draw-mode additions ---------- */
-.instructions{
-  font-size:17px;font-weight:600;color:var(--brand);text-align:center;
-  margin-bottom:12px;user-select:none;
-}
+/* draw-mode, gender-sections, devLog — без изменений */
+.instructions{font-size:17px;font-weight:600;color:var(--brand);text-align:center;margin-bottom:12px;user-select:none;}
 .draw-box{position:relative;width:100%}
 .draw-box img{width:100%;border-radius:16px}
 .draw-box canvas{position:absolute;top:0;left:0;border-radius:16px;touch-action:none}
 #drawModal .close{display:none}
-
-/* tool-toggle */
-.tool-toggle{position:absolute;top:10px;right:10px;width:44px;height:44px;
-  border-radius:50%;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);
-  border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;
-  justify-content:center;cursor:pointer;transition:.3s;}
+.tool-toggle{position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.3s;}
 .tool-toggle:hover{background:rgba(0,0,0,.5)}
 .tool-toggle svg{width:22px;height:22px;fill:#fff}
-
-/* ---------- gender sections ---------- */
 .gender-section{display:none}
 .gender-section.active{display:block}
-
-/* ---------- dev-overlay ---------- */
-#devLog{
-  position:fixed;left:0;bottom:0;width:100%;max-height:40vh;
-  overflow-y:auto;font:12px/1.35 monospace;background:rgba(0,0,0,.75);
-  color:#0f0;z-index:2000;padding:4px 6px;pointer-events:none;
-}
+#devLog{position:fixed;left:0;bottom:0;width:100%;max-height:40vh;overflow-y:auto;font:12px/1.35 monospace;background:rgba(0,0,0,.75);color:#0f0;z-index:2000;padding:4px 6px;pointer-events:none;}
 #devLog div{white-space:pre-wrap}
 </style>
 </head>
 
 <body>
 <div class="frame-inner">
-
 <header class="header">
-  <div class="brand">
-    <img src="https://i.postimg.cc/ZRt8Kz5c/d99041e4-02c1-4b6c-bb6a-eb7c6a595d10.png" alt="Saqa AI">
-  </div>
+  <div class="brand"><img src="https://i.postimg.cc/ZRt8Kz5c/d99041e4-02c1-4b6c-bb6a-eb7c6a595d10.png" alt="Saqa AI"></div>
   <div class="switch">
     <button class="gender-btn active" data-target="female">Женское</button>
     <button class="gender-btn" data-target="male">Мужское</button>
@@ -147,11 +64,8 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 <section id="female" class="gender-section active">
   <h2>Костюмы</h2>
   <div class="carousel">
-    <!-- … картинки … -->
     <div class="card"><img src="https://i.postimg.cc/Qdypmpm9/Chat-GPT-Image-30-2025-15-28-18.png" alt=""></div>
-    <!-- остальные вырезаны для краткости -->
   </div>
-
   <h2>Трикотаж</h2>
   <div class="carousel">
     <div class="card"><img src="https://i.postimg.cc/JzLJNNnT/image.png" alt=""></div>
@@ -170,245 +84,151 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
   </div>
 </section>
 
-<!-- ======== МОДАЛКА ВЫБОРА ОДЕЖДЫ ======== -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <span class="close" id="closeBtn">&times;</span>
-    <div id="modalContent">
-      <img id="modalImg" src="" alt="">
-      <button class="btn" id="chooseBtn">Выбрать</button>
-    </div>
-  </div>
-</div>
-
-<!-- ======== МОДАЛКА РИСОВАНИЯ ======== -->
-<div class="modal" id="drawModal">
-  <div class="modal-box">
-    <div id="drawContent"></div>
-  </div>
-</div>
-
+<!-- ======== МОДАЛКИ ======== -->
+<div class="modal" id="modal"><div class="modal-box"><span class="close" id="closeBtn">&times;</span><div id="modalContent"><img id="modalImg" src="" alt=""><button class="btn" id="chooseBtn">Выбрать</button></div></div></div>
+<div class="modal" id="drawModal"><div class="modal-box"><div id="drawContent"></div></div></div>
 <input type="file" accept="image/*" id="photoInput" style="display:none"/>
-
-</div><!-- /.frame-inner -->
-
-<!-- dev overlay -->
+</div>
 <div id="devLog"></div>
 
 <script>
-/* ---------- минимальный лог ---------- */
+/* ---------- лог ---------- */
 const logBox=document.getElementById('devLog');
-function log(...msg){
-  const line=document.createElement('div');
-  line.textContent='['+new Date().toLocaleTimeString()+'] '+msg.join(' ');
-  logBox.append(line);
-  logBox.scrollTop=logBox.scrollHeight;
-  console.log(...msg);
-}
-
+function log(...msg){const line=document.createElement('div');line.textContent='['+new Date().toLocaleTimeString()+'] '+msg.join(' ');logBox.append(line);logBox.scrollTop=logBox.scrollHeight;console.log(...msg);}
 window.addEventListener('error',e=>log('JS-Error:',e.message));
 window.addEventListener('unhandledrejection',e=>log('Promise-Rej:',e.reason));
 
-/* ---------- Telegram Web-App init ---------- */
-if (window.Telegram?.WebApp){
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
-  log('Telegram WebApp ready');
-}else log('Telegram WebApp NOT detected');
+/* ---------- Telegram Web-App ---------- */
+if (window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();log('Telegram WebApp ready');}else log('Telegram WebApp NOT detected');
 
-/* ---------- DOM-ссылки ---------- */
-const modal=document.getElementById('modal');
-const modalImg=document.getElementById('modalImg');
-const closeBtn=document.getElementById('closeBtn');
-const chooseBtn=document.getElementById('chooseBtn');
-
-const drawModal=document.getElementById('drawModal');
-const drawContent=document.getElementById('drawContent');
-
+/* ---------- DOM ---------- */
+const modal=document.getElementById('modal'), modalImg=document.getElementById('modalImg'), closeBtn=document.getElementById('closeBtn'), chooseBtn=document.getElementById('chooseBtn');
+const drawModal=document.getElementById('drawModal'), drawContent=document.getElementById('drawContent');
 const photoInput=document.getElementById('photoInput');
 
-/* ---------- переменные ---------- */
+/* ---------- state ---------- */
 let selectedOutfit=null, selectedGender=null;
-let userPhoto=null, maskImage=null;
+let userPhoto=null, userPhotoFile=null;
+let maskImage=null;
 
-/* ---------- нумерация карточек ---------- */
+/* ---------- helper: upload to 0x0.st ---------- */
+async function uploadFile(fileOrBlob, name) {
+  const endpoints = [
+    { url: 'https://tmpfiles.org/api/v1/upload', field: 'file',
+      pick: r => r?.data?.url || r?.url },
+    { url: 'https://uguu.se/upload',                field: 'files[]',
+      pick: r => Array.isArray(r) ? r[0]?.url : r?.url },
+  ];
+
+  for (const ep of endpoints) {
+    try {
+      const fd = new FormData();
+      fd.append(ep.field, fileOrBlob, name);
+      const res = await fetch(ep.url, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(res.status);
+      const txt   = await res.text();           // оба хоста отвечают text/plain
+      const data  = JSON.parse(txt);            // но внутри валидный JSON
+      const link  = ep.pick(data);
+      if (link) return link.trim();
+      throw new Error('no link in response');
+    } catch (e) {
+      log('Upload via', ep.url, 'failed →', e.message);
+    }
+  }
+  throw new Error('all uploads failed');
+}
+
+
+/* ---------- init cards ---------- */
 document.querySelectorAll('#female .card').forEach((c,i)=>c.dataset.id=i+1);
 document.querySelectorAll('#male .card').forEach((c,i)=>c.dataset.id=i+1);
-
-/* ---------- выбор одежды ---------- */
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('click',()=>{
     selectedOutfit=card.dataset.id;
     selectedGender=card.closest('section').id;
     modalImg.src=card.querySelector('img').src;
     modal.classList.add('active');
-    log('Click card — outfit',selectedOutfit,'gender',selectedGender);
+    log('Card',selectedOutfit,selectedGender);
   });
 });
 
-/* ---------- закрытие модалки выбора ---------- */
+/* ---------- modals ---------- */
 const closeModal=()=>modal.classList.remove('active');
 closeBtn.addEventListener('click',closeModal);
 modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
-
-/* ---------- загрузка пользовательского фото ---------- */
 chooseBtn.addEventListener('click',()=>photoInput.click());
 photoInput.addEventListener('change',e=>{
-  const file=e.target.files[0];
-  if(!file)return;
+  const file=e.target.files[0]; if(!file)return;
+  userPhotoFile=file;
   const rd=new FileReader();
-  rd.onload=ev=>{
-    userPhoto=ev.target.result;
-    log('Photo loaded, size',userPhoto.length);
-    closeModal();
-    drawMode(userPhoto);
-  };
+  rd.onload=ev=>{userPhoto=ev.target.result;log('Photo loaded');closeModal();drawMode(userPhoto);};
   rd.readAsDataURL(file);
 });
-
-/* ---------- закрытие модалки рисования ---------- */
 const closeDrawModal=()=>drawModal.classList.remove('active');
 drawModal.addEventListener('click',e=>{if(e.target===drawModal)closeDrawModal();});
 
-/* ---------- отправка в бот ---------- */
-function sendToBot(payload) {
-  // ВСЕГДА превращаем в строку
-  const json = JSON.stringify(payload);
-  console.log('sendData =>', json);          // для отладки выводим строку
-  Telegram.WebApp.sendData(json);            // отправляем
-}
+/* ---------- send to bot ---------- */
+function sendToBot(payload){const json=JSON.stringify(payload);console.log('sendData =>',json);Telegram.WebApp.sendData(json);}
 
-
-/* ---------- режим рисования ---------- */
+/* ---------- draw mode ---------- */
 function drawMode(imgSrc){
   drawContent.innerHTML='';
-  const info=document.createElement('div');
-  info.className='instructions';
-  info.textContent='Выделите область одежды, которую хотите заменить.';
-  drawContent.append(info);
-
+  const info=document.createElement('div');info.className='instructions';info.textContent='Выделите область одежды, которую хотите заменить.';drawContent.append(info);
   const box=document.createElement('div');box.className='draw-box';
   const img=document.createElement('img');img.src=imgSrc;
-  const cv=document.createElement('canvas');
-  box.append(img,cv);drawContent.append(box);
+  const cv=document.createElement('canvas');box.append(img,cv);drawContent.append(box);
 
-  /* --- tool toggle --- */
   const toolBtn=document.createElement('button');toolBtn.className='tool-toggle';
-  const icons={
-    eraser:`<svg viewBox="0 0 24 24"><path d="M16.24 3.56a2.5 2.5 0 0 1 3.54 0l.66.66a2.5 2.5 0 0 1 0 3.54l-9.19 9.19-4.24-4.24 9.23-9.15zm-10.95 8.45 4.24 4.24-3.9 3.9a2.5 2.5 0 0 1-3.54 0l-.66-.66a2.5 2.5 0 0 1 0-3.54l3.86-3.94zm5.66 7.07h8v2h-8z"/></svg>`,
-    pencil:`<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75l11.02-11.03-3.75-3.75L3 17.25zm14.81-10.12 2.06-2.06c.39-.39.39-1.02 0-1.41l-1.53-1.53a.996.996 0 0 0-1.41 0l-2.06 2.06 2.94 2.94z"/></svg>`
-  };
-  let isEraser=false;
-  toolBtn.innerHTML=icons.eraser;
-  toolBtn.addEventListener('click',()=>{
-    isEraser=!isEraser;
-    toolBtn.innerHTML=isEraser?icons.pencil:icons.eraser;
-  });
+  const icons={eraser:`<svg viewBox="0 0 24 24"><path d="M16.24 3.56a2.5 2.5 0 0 1 3.54 0l.66.66a2.5 2.5 0 0 1 0 3.54l-9.19 9.19-4.24-4.24 9.23-9.15zm-10.95 8.45 4.24 4.24-3.9 3.9a2.5 2.5 0 0 1-3.54 0l-.66-.66a2.5 2.5 0 0 1 0-3.54l3.86-3.94zm5.66 7.07h8v2h-8z"/></svg>`,pencil:`<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75l11.02-11.03-3.75-3.75L3 17.25zm14.81-10.12 2.06-2.06c.39-.39.39-1.02 0-1.41l-1.53-1.53a.996.996 0 0 0-1.41 0l-2.06 2.06 2.94 2.94z"/></svg>`};
+  let isEraser=false;toolBtn.innerHTML=icons.eraser;
+  toolBtn.addEventListener('click',()=>{isEraser=!isEraser;toolBtn.innerHTML=isEraser?icons.pencil:icons.eraser;});
   box.append(toolBtn);
 
-  const done=document.createElement('button');
-  done.textContent='Готово';
-  done.className='btn';
-  done.style.marginTop='16px';
-  drawContent.append(done);
+  const done=document.createElement('button');done.textContent='Готово';done.className='btn';done.style.marginTop='16px';drawContent.append(done);
 
-  img.onload=()=>{
-    const dpr=window.devicePixelRatio||1;
-    cv.width=img.clientWidth*dpr;
-    cv.height=img.clientHeight*dpr;
-    cv.style.width=img.clientWidth+'px';
-    cv.style.height=img.clientHeight+'px';
-    const ctx=cv.getContext('2d');
-    ctx.scale(dpr,dpr);
-    initDrawing(cv,ctx);
-    log('Canvas ready',cv.width,'x',cv.height);
-  };
+  img.onload=()=>{const dpr=window.devicePixelRatio||1;cv.width=img.clientWidth*dpr;cv.height=img.clientHeight*dpr;cv.style.width=img.clientWidth+'px';cv.style.height=img.clientHeight+'px';const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);initDrawing(cv,ctx);};
 
-  done.addEventListener('click',()=>{
-    maskImage=makeMask(cv);
-    log('mask len',maskImage.length);
-    drawContent.innerHTML='<div class="instructions">Генерация…</div>';
+done.addEventListener('click', async () => {
+  maskImage = makeMask(cv);
+  drawContent.innerHTML = '<div class="instructions">Загружаем…</div>';
+
+  try {
+    const photoUrl = await uploadFile(
+      userPhotoFile,
+      'photo_' + Date.now() + '.png'
+    );
+    const maskBlob = await (await fetch(maskImage)).blob();
+    const maskUrl  = await uploadFile(
+      maskBlob,
+      'mask_' + Date.now() + '.png'
+    );
+
     sendToBot({
-      outfit:Number(selectedOutfit),
-      gender:selectedGender,
-      photo:userPhoto,
-      mask: maskImage,
+      outfit: Number(selectedOutfit),
+      gender: selectedGender,
+      photo:  photoUrl,
+      mask:   maskUrl,
     });
-  });
 
-  function makeMask(c){
-    const {width,height}=c;
-    const d=c.getContext('2d').getImageData(0,0,width,height);
-    const data=d.data;
-    for(let i=0;i<data.length;i+=4){
-      const a=data[i+3];
-      if(a>0){data[i]=data[i+1]=data[i+2]=255;}
-      else   {data[i]=data[i+1]=data[i+2]=0;}
-      data[i+3]=255;
-    }
-    const m=document.createElement('canvas');
-    m.width=width;m.height=height;
-    m.getContext('2d').putImageData(d,0,0);
-    return m.toDataURL('image/png');
+    drawContent.innerHTML =
+      '<div class="instructions">✅ Отправлено в бота!</div>';
+  } catch (err) {
+    log('Upload error', err);
+    drawContent.innerHTML =
+      '<div class="instructions" style="color:#f55">Ошибка загрузки 😔</div>';
   }
+});
 
-  function initDrawing(cv,ctx){
-    const COLOR='rgba(128,0,255,0.5)',WIDTH=40;
-    ctx.lineWidth=WIDTH;ctx.lineCap='round';ctx.lineJoin='round';
-    let drawing=false,prev=null;
-    const pos=e=>{
-      const r=cv.getBoundingClientRect();
-      const p=e.touches?e.touches[0]:e;
-      return{x:p.clientX-r.left,y:p.clientY-r.top};
-    };
-    const start=e=>{e.preventDefault();drawing=true;prev=pos(e);};
-    const move=e=>{
-      if(!drawing)return;
-      e.preventDefault();
-      const curr=pos(e);
-      if(isEraser){
-        ctx.save();
-        ctx.globalCompositeOperation='destination-out';
-        ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();
-        ctx.restore();
-      }else{
-        ctx.save();
-        ctx.globalCompositeOperation='destination-out';
-        ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();
-        ctx.restore();
-        ctx.save();
-        ctx.globalCompositeOperation='source-over';
-        ctx.strokeStyle=COLOR;
-        ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();
-        ctx.restore();
-      }
-      prev=curr;
-    };
-    const stop=()=>{drawing=false;prev=null;};
-    cv.addEventListener('mousedown',start);
-    cv.addEventListener('mousemove',move);
-    window.addEventListener('mouseup',stop);
-    cv.addEventListener('mouseout',stop);
 
-    cv.addEventListener('touchstart',start,{passive:false});
-    cv.addEventListener('touchmove',move,{passive:false});
-    window.addEventListener('touchend',stop);
-  }
-
+  function makeMask(c){const {width,height}=c;const d=c.getContext('2d').getImageData(0,0,width,height);const data=d.data;for(let i=0;i<data.length;i+=4){const a=data[i+3];data[i]=data[i+1]=data[i+2]=a>0?255:0;data[i+3]=255;}const m=document.createElement('canvas');m.width=width;m.height=height;m.getContext('2d').putImageData(d,0,0);return m.toDataURL('image/png');}
+  function initDrawing(cv,ctx){const COLOR='rgba(128,0,255,0.5)',WIDTH=40;ctx.lineWidth=WIDTH;ctx.lineCap='round';ctx.lineJoin='round';let drawing=false,prev=null;const pos=e=>{const r=cv.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top};};const start=e=>{e.preventDefault();drawing=true;prev=pos(e);};const move=e=>{if(!drawing)return;e.preventDefault();const curr=pos(e);if(isEraser){ctx.save();ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();}else{ctx.save();ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();ctx.save();ctx.globalCompositeOperation='source-over';ctx.strokeStyle=COLOR;ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();}prev=curr;};const stop=()=>{drawing=false;prev=null;};cv.addEventListener('mousedown',start);cv.addEventListener('mousemove',move);window.addEventListener('mouseup',stop);cv.addEventListener('mouseout',stop);cv.addEventListener('touchstart',start,{passive:false});cv.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',stop);}
   drawModal.classList.add('active');
 }
 
-/* ---------- переключатель полов ---------- */
+/* ---------- gender switch ---------- */
 const genderBtns=document.querySelectorAll('.gender-btn');
 const sections={female:document.getElementById('female'),male:document.getElementById('male')};
-genderBtns.forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    genderBtns.forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const t=btn.dataset.target;
-    Object.keys(sections).forEach(k=>sections[k].classList.toggle('active',k===t));
-  });
-});
+genderBtns.forEach(btn=>btn.addEventListener('click',()=>{genderBtns.forEach(b=>b.classList.remove('active'));btn.classList.add('active');const t=btn.dataset.target;Object.keys(sections).forEach(k=>sections[k].classList.toggle('active',k===t));}));
 </script>
 </body>
 </html>
