@@ -29,7 +29,7 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 .card:hover{transform:scale(1.05)}.card:hover::after{opacity:1}
 .modal{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:.35s;z-index:998;padding:20px;}
 .modal.active{opacity:1;visibility:visible}
-.modal-box{position:relative;background:var(--bg-2);border-radius:22px;padding:20px;max-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.modal-box{position:relative;background:var(--bg-2);border-radius:22px;padding:20px;max-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;max-height:90vh;overflow:hidden}
 .close{position:absolute;top:22px;right:26px;font-size:28px;font-weight:600;color:#fff;cursor:pointer}
 .modal-box img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:16px}
 .btn{width:100%;padding:14px 28px;background:var(--accent);border:none;border-radius:10px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;transition:background .3s;}
@@ -48,27 +48,19 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 #devLog{position:fixed;left:0;bottom:0;width:100%;max-height:40vh;overflow-y:auto;font:12px/1.35 monospace;background:rgba(0,0,0,.75);color:#0f0;z-index:2000;padding:4px 6px;pointer-events:none;}
 #devLog div{white-space:pre-wrap}
 
-/* --- Fix: autosize images in modals & draw mode --- */
-.modal-box{
-  max-height:90vh;              /* не даём модалке выходить за экран */
-  overflow-y:auto;
-}
+/* --- Fix-1 (предыдущий): autosize в обычных модалках --- */
 #modalContent{display:flex;flex-direction:column;align-items:center;gap:20px;}
-.modal-box img,
-.draw-box img{
-  display:block;
-  width:auto;                   /* чтобы не растягивалось насильно */
-  max-width:100%;
-  max-height:70vh;              /* главное ограничение высоты */
-  height:auto;
-  object-fit:contain;
-  aspect-ratio:auto;            /* отменяем фиксированное 2/3 */
-}
-/* --- End fix --- */
+.modal-box img{display:block;width:auto;max-width:100%;max-height:70vh;object-fit:contain;aspect-ratio:auto;}
+
+/* --- Fix-2: центр + ограничение размера в drawModal --- */
+#drawContent{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.draw-box{position:relative;max-width:100%;margin:auto;}
+.draw-box img,.draw-box canvas{display:block;width:auto;max-width:100%;max-height:65vh;height:auto;object-fit:contain;aspect-ratio:auto;}
+/* --- End fixes --- */
 </style>
 </head>
-
 <body>
+<!-- --------- HTML (без изменений) --------- -->
 <div class="frame-inner">
 <header class="header">
   <div class="brand"><img src="https://i.postimg.cc/ZRt8Kz5c/d99041e4-02c1-4b6c-bb6a-eb7c6a595d10.png" alt="Saqa AI"></div>
@@ -109,6 +101,7 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 </div>
 <div id="devLog"></div>
 
+<!-- --------- JS (без изменений) --------- -->
 <script>
 /* ---------- лог ---------- */
 const logBox=document.getElementById('devLog');
@@ -155,7 +148,6 @@ async function uploadFile(fileOrBlob, name) {
   }
   throw new Error('all uploads failed');
 }
-
 
 /* ---------- init cards ---------- */
 document.querySelectorAll('#female .card').forEach((c,i)=>c.dataset.id=i+1);
@@ -236,7 +228,6 @@ done.addEventListener('click', async () => {
       '<div class="instructions" style="color:#f55">Ошибка загрузки 😔</div>';
   }
 });
-
 
   function makeMask(c){const {width,height}=c;const d=c.getContext('2d').getImageData(0,0,width,height);const data=d.data;for(let i=0;i<data.length;i+=4){const a=data[i+3];data[i]=data[i+1]=data[i+2]=a>0?255:0;data[i+3]=255;}const m=document.createElement('canvas');m.width=width;m.height=height;m.getContext('2d').putImageData(d,0,0);return m.toDataURL('image/png');}
   function initDrawing(cv,ctx){const COLOR='rgba(128,0,255,0.5)',WIDTH=40;ctx.lineWidth=WIDTH;ctx.lineCap='round';ctx.lineJoin='round';let drawing=false,prev=null;const pos=e=>{const r=cv.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top};};const start=e=>{e.preventDefault();drawing=true;prev=pos(e);};const move=e=>{if(!drawing)return;e.preventDefault();const curr=pos(e);if(isEraser){ctx.save();ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();}else{ctx.save();ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();ctx.save();ctx.globalCompositeOperation='source-over';ctx.strokeStyle=COLOR;ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();}prev=curr;};const stop=()=>{drawing=false;prev=null;};cv.addEventListener('mousedown',start);cv.addEventListener('mousemove',move);window.addEventListener('mouseup',stop);cv.addEventListener('mouseout',stop);cv.addEventListener('touchstart',start,{passive:false});cv.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',stop);}
