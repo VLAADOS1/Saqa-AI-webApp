@@ -12,8 +12,22 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{scrollbar-width:none;-ms-overflow-style:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
-body{font-family:'Inter',sans-serif;color:var(--text);background:linear-gradient(160deg,#000 0%,#151515 100%);min-height:100vh;overflow:hidden;position:relative;}
-body::before{content:'';position:fixed;inset:12px;border:2px solid var(--frame);border-radius:24px;pointer-events:none;z-index:999;box-shadow:0 0 6px 1px rgba(13,187,147,.75),0 0 14px 4px rgba(13,187,147,.45),0 0 22px 10px rgba(13,187,147,.25);}
+body{font-family:'Inter',sans-serif;color:var(--text);background:linear-gradient(160deg,#000 0%,#151515 100%);min-height:100vh;position:relative;}   /* --- Fix: убрали overflow:hidden --- */
+ /* --- Fix: рамка и свечение только наружу --- */
+body::before{
+  content:'';
+  position:fixed;
+  inset:12px;
+  border-radius:24px;
+  pointer-events:none;
+  z-index:999;
+  /* 1-й слой = сама линия рамки, остальные — свечение */
+  box-shadow:
+    0 0 0 2px var(--frame),
+    0 0 6px 1px rgba(13,187,147,.75),
+    0 0 14px 4px rgba(13,187,147,.45),
+    0 0 22px 10px rgba(13,187,147,.25);
+}
 .frame-inner{height:calc(100vh - 24px);margin:12px;border-radius:24px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .header{text-align:center;padding:28px 20px 12px}.brand{display:flex;justify-content:center;align-items:center;margin-bottom:4px}
 .brand img{height:40px;width:auto;display:block}
@@ -29,16 +43,23 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 .card:hover{transform:scale(1.05)}.card:hover::after{opacity:1}
 .modal{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:.35s;z-index:998;padding:20px;}
 .modal.active{opacity:1;visibility:visible}
-.modal-box{position:relative;background:var(--bg-2);border-radius:22px;padding:20px;max-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;max-height:90vh;overflow:hidden}
+.modal-box{position:relative;background:var(--bg-2);border-radius:22px;padding:20px;max-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;}
 .close{position:absolute;top:22px;right:26px;font-size:28px;font-weight:600;color:#fff;cursor:pointer}
 .modal-box img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:16px}
 .btn{width:100%;padding:14px 28px;background:var(--accent);border:none;border-radius:10px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;transition:background .3s;}
 .btn:hover{background:#1877ff}
 /* draw-mode, gender-sections, devLog — без изменений */
 .instructions{font-size:17px;font-weight:600;color:var(--brand);text-align:center;margin-bottom:12px;user-select:none;}
-.draw-box{position:relative;width:100%}
-.draw-box img{width:100%;border-radius:16px}
-.draw-box canvas{position:absolute;top:0;left:0;border-radius:16px;touch-action:none}
+/* --- Fix: draw-box выравнивание и отсечка развала --- */
+.draw-box{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  display:flex;
+  justify-content:center;
+}
+.draw-box img{display:block;max-width:100%;max-height:70vh;height:auto;width:auto;border-radius:16px}
+.draw-box canvas{position:absolute;top:0;left:0;border-radius:16px;touch-action:none;max-width:100%;max-height:70vh;}
 #drawModal .close{display:none}
 .tool-toggle{position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.3s;}
 .tool-toggle:hover{background:rgba(0,0,0,.5)}
@@ -48,19 +69,27 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 #devLog{position:fixed;left:0;bottom:0;width:100%;max-height:40vh;overflow-y:auto;font:12px/1.35 monospace;background:rgba(0,0,0,.75);color:#0f0;z-index:2000;padding:4px 6px;pointer-events:none;}
 #devLog div{white-space:pre-wrap}
 
-/* --- Fix-1 (предыдущий): autosize в обычных модалках --- */
+/* --- Fix: autosize images in modals & draw mode (было, но оставляем) --- */
+.modal-box{max-height:90vh;overflow-y:auto;}
 #modalContent{display:flex;flex-direction:column;align-items:center;gap:20px;}
-.modal-box img{display:block;width:auto;max-width:100%;max-height:70vh;object-fit:contain;aspect-ratio:auto;}
+.modal-box img,.draw-box img{display:block;width:auto;max-width:100%;max-height:70vh;height:auto;object-fit:contain;aspect-ratio:auto;}
 
-/* --- Fix-2: центр + ограничение размера в drawModal --- */
-#drawContent{display:flex;flex-direction:column;align-items:center;gap:20px;}
-.draw-box{position:relative;max-width:100%;margin:auto;}
-.draw-box img,.draw-box canvas{display:block;width:auto;max-width:100%;max-height:65vh;height:auto;object-fit:contain;aspect-ratio:auto;}
+/* --- Fix: кнопка «Готово» всегда видна --- */
+.done-btn{
+  position:fixed;
+  bottom:28px;                /* 12px + 16px отступ */
+  left:50%;
+  transform:translateX(-50%);
+  width:calc(100% - 48px);    /* 2×24px = отступы рамки */
+  max-width:600px;
+  z-index:1001;
+}
+
 /* --- End fixes --- */
 </style>
 </head>
+
 <body>
-<!-- --------- HTML (без изменений) --------- -->
 <div class="frame-inner">
 <header class="header">
   <div class="brand"><img src="https://i.postimg.cc/ZRt8Kz5c/d99041e4-02c1-4b6c-bb6a-eb7c6a595d10.png" alt="Saqa AI"></div>
@@ -101,7 +130,6 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 </div>
 <div id="devLog"></div>
 
-<!-- --------- JS (без изменений) --------- -->
 <script>
 /* ---------- лог ---------- */
 const logBox=document.getElementById('devLog');
@@ -149,6 +177,7 @@ async function uploadFile(fileOrBlob, name) {
   throw new Error('all uploads failed');
 }
 
+
 /* ---------- init cards ---------- */
 document.querySelectorAll('#female .card').forEach((c,i)=>c.dataset.id=i+1);
 document.querySelectorAll('#male .card').forEach((c,i)=>c.dataset.id=i+1);
@@ -194,7 +223,8 @@ function drawMode(imgSrc){
   toolBtn.addEventListener('click',()=>{isEraser=!isEraser;toolBtn.innerHTML=isEraser?icons.pencil:icons.eraser;});
   box.append(toolBtn);
 
-  const done=document.createElement('button');done.textContent='Готово';done.className='btn';done.style.marginTop='16px';drawContent.append(done);
+  const done=document.createElement('button');done.textContent='Готово';done.className='btn done-btn';      /* --- Fix: добавлен класс done-btn --- */
+  drawContent.append(done);
 
   img.onload=()=>{const dpr=window.devicePixelRatio||1;cv.width=img.clientWidth*dpr;cv.height=img.clientHeight*dpr;cv.style.width=img.clientWidth+'px';cv.style.height=img.clientHeight+'px';const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);initDrawing(cv,ctx);};
 
@@ -228,6 +258,7 @@ done.addEventListener('click', async () => {
       '<div class="instructions" style="color:#f55">Ошибка загрузки 😔</div>';
   }
 });
+
 
   function makeMask(c){const {width,height}=c;const d=c.getContext('2d').getImageData(0,0,width,height);const data=d.data;for(let i=0;i<data.length;i+=4){const a=data[i+3];data[i]=data[i+1]=data[i+2]=a>0?255:0;data[i+3]=255;}const m=document.createElement('canvas');m.width=width;m.height=height;m.getContext('2d').putImageData(d,0,0);return m.toDataURL('image/png');}
   function initDrawing(cv,ctx){const COLOR='rgba(128,0,255,0.5)',WIDTH=40;ctx.lineWidth=WIDTH;ctx.lineCap='round';ctx.lineJoin='round';let drawing=false,prev=null;const pos=e=>{const r=cv.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top};};const start=e=>{e.preventDefault();drawing=true;prev=pos(e);};const move=e=>{if(!drawing)return;e.preventDefault();const curr=pos(e);if(isEraser){ctx.save();ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();}else{ctx.save();ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();ctx.save();ctx.globalCompositeOperation='source-over';ctx.strokeStyle=COLOR;ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(curr.x,curr.y);ctx.stroke();ctx.restore();}prev=curr;};const stop=()=>{drawing=false;prev=null;};cv.addEventListener('mousedown',start);cv.addEventListener('mousemove',move);window.addEventListener('mouseup',stop);cv.addEventListener('mouseout',stop);cv.addEventListener('touchstart',start,{passive:false});cv.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',stop);}
