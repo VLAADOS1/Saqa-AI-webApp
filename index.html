@@ -47,6 +47,24 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 .gender-section.active{display:block}
 #devLog{position:fixed;left:0;bottom:0;width:100%;max-height:40vh;overflow-y:auto;font:12px/1.35 monospace;background:rgba(0,0,0,.75);color:#0f0;z-index:2000;padding:4px 6px;pointer-events:none;}
 #devLog div{white-space:pre-wrap}
+
+/* --- Fix: autosize images in modals & draw mode --- */
+.modal-box{
+  max-height:90vh;              /* не даём модалке выходить за экран */
+  overflow-y:auto;
+}
+#modalContent{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.modal-box img,
+.draw-box img{
+  display:block;
+  width:auto;                   /* чтобы не растягивалось насильно */
+  max-width:100%;
+  max-height:70vh;              /* главное ограничение высоты */
+  height:auto;
+  object-fit:contain;
+  aspect-ratio:auto;            /* отменяем фиксированное 2/3 */
+}
+/* --- End fix --- */
 </style>
 </head>
 
