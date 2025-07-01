@@ -232,7 +232,7 @@ function drawMode(imgSrc){
   };
 
   done.addEventListener('click', async ()=>{
-    maskImage = makeMask(cv);
+    maskImage = makeMask(cv, img.naturalWidth, img.naturalHeight);
     drawContent.innerHTML = '<div class="instructions">Загружаем…</div>';
 
     try{
@@ -259,21 +259,27 @@ function drawMode(imgSrc){
     }
   });
 
-  function makeMask(c){
-    const {width,height}=c;
-    const d=c.getContext('2d').getImageData(0,0,width,height);
-    const data=d.data;
-    for(let i=0;i<data.length;i+=4){
-      const a=data[i+3];
-      data[i]=data[i+1]=data[i+2]=a>0?255:0;
-      data[i+3]=255;
-    }
-    const m=document.createElement('canvas');
-    m.width=width;
-    m.height=height;
-    m.getContext('2d').putImageData(d,0,0);
-    return m.toDataURL('image/png');
+function makeMask(srcCanvas, natW, natH){
+  const m = document.createElement('canvas');
+  m.width  = natW;
+  m.height = natH;
+  const mCtx = m.getContext('2d');
+
+  mCtx.drawImage(srcCanvas, 0, 0, natW, natH);
+
+  const imgData = mCtx.getImageData(0, 0, natW, natH);
+  const data = imgData.data;
+  for (let i = 0; i < data.length; i += 4){
+    const on = data[i + 3] > 0;       
+    const val = on ? 255 : 0;
+    data[i] = data[i+1] = data[i+2] = val;
+    data[i+3] = 255;
   }
+  mCtx.putImageData(imgData, 0, 0);
+
+  return m.toDataURL('image/png');
+}
+
 
   function initDrawing(cv,ctx){
     const COLOR='rgba(128,0,255,0.5)', WIDTH=40;
