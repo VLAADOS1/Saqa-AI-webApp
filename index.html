@@ -299,7 +299,8 @@ function makeMask(srcCanvas, natW, natH){
   const data = imgData.data;
   for (let i = 0; i < data.length; i += 4){
     const on = data[i + 3] > 0;       
-    const val = on ? 255 : 0;
+    // const val = on ? 255 : 0;
+    const val = on ? 0 : 255;
     data[i] = data[i+1] = data[i+2] = val;
     data[i+3] = 255;
   }
