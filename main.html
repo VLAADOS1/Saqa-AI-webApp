@@ -7,7 +7,6 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
-/* ----- ВЕСЬ исходный CSS без изменений, кроме удаления devLog ----- */
 :root{--frame:rgb(13,187,147);--bg-1:#000;--bg-2:#0e0e11;--accent:#2e90ff;--brand:var(--frame);--text:#fff;}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{scrollbar-width:none;-ms-overflow-style:none}
@@ -46,15 +45,13 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
 .gender-section{display:none}
 .gender-section.active{display:block}
 
-/* --- Fix: autosize images in modals & draw mode --- */
 .modal-box{max-height:90vh;overflow-y:auto;}
 #modalContent{display:flex;flex-direction:column;align-items:center;gap:20px;}
 .modal-box img,.draw-box img{display:block;width:auto;max-width:100%;max-height:70vh;height:auto;object-fit:contain;aspect-ratio:auto;}
-/* --- End fix --- */
 
 .back-btn{
   position:fixed;
-  top:26px;               /* выравниваем с рамкой 12 px + 14 px «воздуха» */
+  top:26px;               
   left:26px;
   display:flex;
   align-items:center;
@@ -67,26 +64,25 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
   border-radius:14px;
   backdrop-filter:blur(4px);
   cursor:pointer;
-  z-index:1000;           /* выше рамки */
+  z-index:1000;           
   transition:.3s;
 }
 .back-btn svg{
   width:18px;
   height:18px;
   fill:currentColor;
-  transform:translateX(-2px);      /* лёгкий оптический центр */
+  transform:translateX(-2px);      
 }
 .back-btn:hover{
   background:var(--brand);
   color:#000;
-  transform:translateY(-2px);      /* лёгкий приподъём */
+  transform:translateY(-2px);     
 }
 </style>
 </head>
 
 <body>
   <button class="back-btn" onclick="location.href='index.html'">
-  <!-- стрелка-иконка -->
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
@@ -101,7 +97,6 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
   </div>
 </header>
 
-<!-- ======== ЖЕНСКАЯ КАТЕГОРИЯ ======== -->
 <section id="female" class="gender-section active">
   <h2>Костюмы</h2>
   <div class="carousel">
@@ -156,7 +151,6 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
   </div>
 </section>
 
-<!-- ======== МУЖСКАЯ КАТЕГОРИЯ ======== -->
 <section id="male" class="gender-section">
   <h2>Костюмы</h2>
   <div class="carousel">
@@ -198,20 +192,17 @@ h2{font-size:22px;font-weight:600;margin:24px 20px 16px}
   </div>
 </section>
 
-<!-- ======== МОДАЛКИ ======== -->
 <div class="modal" id="modal"><div class="modal-box"><span class="close" id="closeBtn">&times;</span><div id="modalContent"><img id="modalImg" src="" alt=""><button class="btn" id="chooseBtn">Выбрать</button></div></div></div>
 <div class="modal" id="drawModal"><div class="modal-box"><div id="drawContent"></div></div></div>
 <input type="file" accept="image/*" id="photoInput" style="display:none"/>
 </div>
 
 <script>
-/* ---------- Telegram Web-App ---------- */
 if (window.Telegram?.WebApp){
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
 }
 
-/* ---------- DOM ---------- */
 const modal      = document.getElementById('modal'),
       modalImg   = document.getElementById('modalImg'),
       closeBtn   = document.getElementById('closeBtn'),
@@ -221,7 +212,6 @@ const drawModal  = document.getElementById('drawModal'),
       drawContent= document.getElementById('drawContent'),
       photoInput = document.getElementById('photoInput');
 
-/* ---------- state ---------- */
 let selectedOutfit = null,
     selectedGender = null;
 
@@ -229,7 +219,6 @@ let userPhoto     = null,
     userPhotoFile = null,
     maskImage     = null;
 
-/* ---------- helper: upload to tmpfiles / uguu ---------- */
 async function uploadFile(fileOrBlob, name){
   const endpoints = [
     { url:'https://tmpfiles.org/api/v1/upload', field:'file',
@@ -248,13 +237,11 @@ async function uploadFile(fileOrBlob, name){
       if(link) return link.trim();
       throw new Error('no link in response');
     }catch(e){
-      /* просто пробуем следующий эндпоинт */
     }
   }
   throw new Error('all uploads failed');
 }
 
-/* ---------- init cards ---------- */
 document.querySelectorAll('#female .card').forEach((c,i)=>c.dataset.id=i+1);
 document.querySelectorAll('#male   .card').forEach((c,i)=>c.dataset.id=i+1);
 
@@ -267,7 +254,6 @@ document.querySelectorAll('.card').forEach(card=>{
   });
 });
 
-/* ---------- modals ---------- */
 const closeModal = () => modal.classList.remove('active');
 closeBtn.addEventListener('click', closeModal);
 modal.addEventListener('click', e => { if(e.target===modal) closeModal(); });
@@ -289,12 +275,10 @@ photoInput.addEventListener('change', e=>{
 const closeDrawModal = () => drawModal.classList.remove('active');
 drawModal.addEventListener('click', e => { if(e.target===drawModal) closeDrawModal(); });
 
-/* ---------- send to bot ---------- */
 function sendToBot(payload){
   Telegram.WebApp.sendData(JSON.stringify(payload));
 }
 
-/* ---------- draw mode ---------- */
 function drawMode(imgSrc){
   drawContent.innerHTML = '';
   const info = document.createElement('div');
@@ -449,7 +433,6 @@ function makeMask(srcCanvas, natW, natH){
   drawModal.classList.add('active');
 }
 
-/* ---------- gender switch ---------- */
 const genderBtns=document.querySelectorAll('.gender-btn');
 const sections = {
   female: document.getElementById('female'),

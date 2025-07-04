@@ -40,16 +40,14 @@
   }
   button:active{transform:scale(.97)}
   button:hover{background:var(--violet-light)}
-  .span-2{grid-column:span 2}.icon{font-size:1.4em;flex:0 0 auto}
+  .icon{font-size:1.4em;flex:0 0 auto}
   @media(max-width:380px){button{font-size:16px}}
-  /* --- универсальный «блок-карточка» для info/help --- */
   .info-wrap{
     max-width:380px;width:100%;
     background:rgba(0,0,0,.35);
     border:2px solid rgba(255,255,255,.1);
     border-radius:var(--radius);
-    padding:16px 18px;
-    line-height:1.36;font-size:16px;
+    padding:16px 18px;line-height:1.36;font-size:16px;
   }
   .info-wrap h3{margin:0 0 8px;font-size:17px}
   .info-wrap p{margin:10px 0}
@@ -57,15 +55,13 @@
 </head>
 <body>
 
-<!-- ========== СЕКЦИЯ 1: ГЛАВНОЕ МЕНЮ ========== -->
 <section id="page-main">
   <div class="grid">
-    <button id="btnPhoto"><span class="icon">📷</span> Сгенерировать фото</button>
+    <button id="btnPhoto"><span class="icon">📷</span> Создать фото</button>
     <button id="btnAgent"><span class="icon">🧬</span> Создать агента</button>
 
-    <button id="btnClothes" class="span-2">
-      <span class="icon">👕</span> Сменить одежду
-    </button>
+    <button id="btnClothes"><span class="icon">👕</span> Сменить одежду</button>
+    <button id="btnSwitchAgent"><span class="icon">🔄</span> Сменить агента</button>
 
     <button id="btnFilters"><span class="icon">🎨</span> Наши фильтры</button>
     <button id="btnBalance"><span class="icon">🔍</span> Мой баланс</button>
@@ -75,7 +71,6 @@
   </div>
 </section>
 
-<!-- ========== СЕКЦИЯ 2: ВЫБОР ФИЛЬТРА ========== -->
 <section id="page-filters" class="hidden">
   <div class="grid">
     <button id="back-filters" class="span-2"><span class="icon">⬅️</span> Назад</button>
@@ -95,7 +90,6 @@
   </div>
 </section>
 
-<!-- ========== СЕКЦИЯ 3: INFO — ШПАРГАЛКА СО СТИЛЯМИ ========== -->
 <section id="page-info" class="hidden">
   <div class="grid">
     <button id="back-info" class="span-2"><span class="icon">⬅️</span> Назад</button>
@@ -115,7 +109,6 @@
   </div>
 </section>
 
-<!-- ========== СЕКЦИЯ 4: HELP ========== -->
 <section id="page-help" class="hidden">
   <div class="grid">
     <button id="back-help" class="span-2"><span class="icon">⬅️</span> Назад</button>
@@ -155,28 +148,23 @@
 </section>
 
 <script>
-/* ==== Telegram WebApp boot ==== */
 if (window.Telegram && Telegram.WebApp){ Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
 
-/* ==== helpers ==== */
 const $     = s => document.querySelector(s);
 const show  = el => el.classList.remove('hidden');
 const hide  = el => el.classList.add('hidden');
 
-/* ==== страницы ==== */
 const pageMain    = $('#page-main');
 const pageFilters = $('#page-filters');
 const pageInfo    = $('#page-info');
 const pageHelp    = $('#page-help');
 
-/* ==== отправка в бот (для нужных действий) ==== */
 function send(action,payload={}){ 
   const data = JSON.stringify({action,...payload});
   if (Telegram.WebApp){ Telegram.WebApp.sendData(data); }
   else { console.log('DEBUG',data); alert('DEBUG '+data); }
 }
 
-/* ---------- НАВИГАЦИЯ ---------- */
 $('#btnPhoto').onclick   = ()=>{ hide(pageMain); show(pageFilters); };
 $('#back-filters').onclick = ()=>{ show(pageMain); hide(pageFilters); };
 
@@ -186,21 +174,17 @@ $('#back-info').onclick  = ()=>{ show(pageMain); hide(pageInfo); };
 $('#btnHelp').onclick    = ()=>{ hide(pageMain); show(pageHelp); };
 $('#back-help').onclick  = ()=>{ show(pageMain); hide(pageHelp); };
 
-/* ---------- кнопки, которые всё ещё шлют данные ---------- */
-$('#btnAgent').onclick   = ()=> send('create_agent');
+$('#btnAgent').onclick       = ()=> send('create_agent');
+$('#btnSwitchAgent').onclick = ()=> send('change_agent');
 
-$('#btnClothes').onclick = () => {
-  window.location.href = 'main.html'; 
-};
+$('#btnClothes').onclick = ()=> window.location.href = 'index.html';
 
 $('#btnBalance').onclick = ()=> send('balance');
-
 $('#btnBuy').onclick     = ()=> send('buy_generations');
 
-/* ---------- FILTR buttons ---------- */
 pageFilters.querySelectorAll('button[data-filter]').forEach(btn=>{
   btn.onclick = ()=>{
-    send('generate_photo',{filter:btn.dataset.filter});   // yakut_man, on_beach …
+    send('generate_photo',{filter:btn.dataset.filter});
     show(pageMain); hide(pageFilters);
   };
 });
