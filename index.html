@@ -24,30 +24,50 @@
     display:flex;align-items:center;justify-content:center;
     padding:3vh 3vw;
   }
+
   .hidden{display:none!important}
+
   .grid{
-    display:grid;gap:10px;width:100%;max-width:380px;
+    display:grid;
+    gap:10px;
+    width:100%;
+    max-width:380px;
     grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   }
+
+  .span-2{grid-column:span 2}
+
   button{
     background:var(--violet);
     border:2px solid rgba(255,255,255,.07);
     border-radius:var(--radius);
-    color:var(--txt);font-size:18px;font-weight:600;
-    padding:14px 12px;text-align:left;
-    display:flex;align-items:center;gap:8px;
-    cursor:pointer;transition:background .25s,transform .15s;width:100%;
+    color:var(--txt);
+    font-size:18px;
+    font-weight:600;
+    padding:14px 12px;
+    text-align:left;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    transition:background .25s,transform .15s;
+    width:100%;
   }
   button:active{transform:scale(.97)}
   button:hover{background:var(--violet-light)}
   .icon{font-size:1.4em;flex:0 0 auto}
   @media(max-width:380px){button{font-size:16px}}
+
+  #btnHelp{justify-content:center;text-align:center}
+
   .info-wrap{
     max-width:380px;width:100%;
     background:rgba(0,0,0,.35);
     border:2px solid rgba(255,255,255,.1);
     border-radius:var(--radius);
-    padding:16px 18px;line-height:1.36;font-size:16px;
+    padding:16px 18px;
+    line-height:1.36;
+    font-size:16px;
   }
   .info-wrap h3{margin:0 0 8px;font-size:17px}
   .info-wrap p{margin:10px 0}
@@ -58,16 +78,18 @@
 <section id="page-main">
   <div class="grid">
     <button id="btnPhoto"><span class="icon">📷</span> Создать фото</button>
+    <button id="btnVideo"><span class="icon">🎬</span> Создать видео</button>
+
     <button id="btnAgent"><span class="icon">🧬</span> Создать агента</button>
-
     <button id="btnClothes"><span class="icon">👕</span> Сменить одежду</button>
+
     <button id="btnSwitchAgent"><span class="icon">🔄</span> Сменить агента</button>
-
     <button id="btnFilters"><span class="icon">🎨</span> Наши фильтры</button>
-    <button id="btnBalance"><span class="icon">🔍</span> Мой баланс</button>
 
+    <button id="btnBalance"><span class="icon">🔍</span> Мой баланс</button>
     <button id="btnBuy"><span class="icon">💰</span> Купить генерации</button>
-    <button id="btnHelp"><span class="icon">ℹ️</span> Помощь</button>
+
+    <button id="btnHelp" class="span-2"><span class="icon">ℹ️</span> Помощь</button>
   </div>
 </section>
 
@@ -148,7 +170,10 @@
 </section>
 
 <script>
-if (window.Telegram && Telegram.WebApp){ Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
+if (window.Telegram && Telegram.WebApp){
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
 
 const $     = s => document.querySelector(s);
 const show  = el => el.classList.remove('hidden');
@@ -159,32 +184,36 @@ const pageFilters = $('#page-filters');
 const pageInfo    = $('#page-info');
 const pageHelp    = $('#page-help');
 
-function send(action,payload={}){ 
-  const data = JSON.stringify({action,...payload});
-  if (Telegram.WebApp){ Telegram.WebApp.sendData(data); }
-  else { console.log('DEBUG',data); alert('DEBUG '+data); }
+function send(action, payload = {}){
+  const data = JSON.stringify({ action, ...payload });
+  if (Telegram.WebApp){
+    Telegram.WebApp.sendData(data);
+  } else {
+    console.log('DEBUG', data);
+    alert('DEBUG ' + data);
+  }
 }
 
-$('#btnPhoto').onclick   = ()=>{ hide(pageMain); show(pageFilters); };
-$('#back-filters').onclick = ()=>{ show(pageMain); hide(pageFilters); };
+$('#btnPhoto').onclick        = () => { hide(pageMain); show(pageFilters); };
+$('#btnVideo').onclick        = () => send('create_video');
 
-$('#btnFilters').onclick = ()=>{ hide(pageMain); show(pageInfo); };
-$('#back-info').onclick  = ()=>{ show(pageMain); hide(pageInfo); };
+$('#btnAgent').onclick        = () => send('create_agent');
+$('#btnClothes').onclick      = () => window.location.href = 'main.html';
+$('#btnSwitchAgent').onclick  = () => send('change_agent');
 
-$('#btnHelp').onclick    = ()=>{ hide(pageMain); show(pageHelp); };
-$('#back-help').onclick  = ()=>{ show(pageMain); hide(pageHelp); };
+$('#btnFilters').onclick      = () => { hide(pageMain); show(pageInfo); };
+$('#btnBalance').onclick      = () => send('balance');
+$('#btnBuy').onclick          = () => send('buy_generations');
 
-$('#btnAgent').onclick       = ()=> send('create_agent');
-$('#btnSwitchAgent').onclick = ()=> send('change_agent');
+$('#btnHelp').onclick         = () => { hide(pageMain); show(pageHelp); };
 
-$('#btnClothes').onclick = ()=> window.location.href = 'main.html';
+$('#back-filters').onclick    = () => { show(pageMain); hide(pageFilters); };
+$('#back-info').onclick       = () => { show(pageMain); hide(pageInfo); };
+$('#back-help').onclick       = () => { show(pageMain); hide(pageHelp); };
 
-$('#btnBalance').onclick = ()=> send('balance');
-$('#btnBuy').onclick     = ()=> send('buy_generations');
-
-pageFilters.querySelectorAll('button[data-filter]').forEach(btn=>{
-  btn.onclick = ()=>{
-    send('generate_photo',{filter:btn.dataset.filter});
+pageFilters.querySelectorAll('button[data-filter]').forEach(btn => {
+  btn.onclick = () => {
+    send('generate_photo', { filter: btn.dataset.filter });
     show(pageMain); hide(pageFilters);
   };
 });
