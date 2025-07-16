@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Photo Mini-App</title>
+<title>AI Photo Mini‑App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root{
@@ -59,7 +59,7 @@
   @media(max-width:380px){button{font-size:16px}}
 
   #btnHelp{justify-content:center;text-align:center}
-  #btnEnhance{justify-content:center;text-align:center}  /* чтобы текст был по центру */
+  #btnEnhance,#btnResize{justify-content:center;text-align:center}
 
   .info-wrap{
     max-width:380px;width:100%;
@@ -76,34 +76,35 @@
 </head>
 <body>
 
-<!-- ────────────── ГЛАВНАЯ ────────────── -->
+<!-- ────────── ГЛАВНАЯ ────────── -->
 <section id="page-main">
   <div class="grid">
-    <!-- 1-й ряд -->
+    <!-- 1‑й ряд -->
     <button id="btnPhoto"><span class="icon">📷</span> Создать фото</button>
     <button id="btnVideo"><span class="icon">🎬</span> Создать видео</button>
 
-    <!-- 2-й ряд: новая крупная кнопка -->
-    <button id="btnEnhance" class="span-2"><span class="icon">✨</span> Улучшить фото</button>
+    <!-- 2‑й ряд: улучшить + увеличить -->
+    <button id="btnEnhance"><span class="icon">✨</span> Улучшить фото</button>
+    <button id="btnResize"><span class="icon">📐</span> Увеличить фото</button>
 
-    <!-- 3-й ряд -->
+    <!-- 3‑й ряд -->
     <button id="btnAgent"><span class="icon">🧬</span> Создать агента</button>
     <button id="btnClothes"><span class="icon">👕</span> Сменить одежду</button>
 
-    <!-- 4-й ряд -->
+    <!-- 4‑й ряд -->
     <button id="btnSwitchAgent"><span class="icon">🔄</span> Сменить агента</button>
     <button id="btnFilters"><span class="icon">🎨</span> Наши фильтры</button>
 
-    <!-- 5-й ряд -->
+    <!-- 5‑й ряд -->
     <button id="btnBalance"><span class="icon">🔍</span> Мой баланс</button>
     <button id="btnBuy"><span class="icon">💰</span> Купить генерации</button>
 
-    <!-- 6-й ряд -->
+    <!-- 6‑й ряд -->
     <button id="btnHelp" class="span-2"><span class="icon">ℹ️</span> Помощь</button>
   </div>
 </section>
 
-<!-- ────────────── СТРАНИЦА ФИЛЬТРОВ ────────────── -->
+<!-- ────────── ВЫБОР ФИЛЬТРА ────────── -->
 <section id="page-filters" class="hidden">
   <div class="grid">
     <button id="back-filters" class="span-2"><span class="icon">⬅️</span> Назад</button>
@@ -123,27 +124,40 @@
   </div>
 </section>
 
-<!-- ────────────── ИНФО ────────────── -->
+<!-- ────────── ВЫБОР РАЗМЕРА ────────── -->
+<section id="page-resize" class="hidden">
+  <div class="grid">
+    <button id="back-resize" class="span-2"><span class="icon">⬅️</span> Назад</button>
+
+    <!-- полный набор соотношений -->
+    <button data-size="1:1"><span class="icon">🔲</span> 1 × 1</button>
+    <button data-size="2:3"><span class="icon">🖼️</span> 2 × 3</button>
+    <button data-size="3:2"><span class="icon">📐</span> 3 × 2</button>
+    <button data-size="3:4"><span class="icon">🧩</span> 3 × 4</button>
+    <button data-size="4:3"><span class="icon">📺</span> 4 × 3</button>
+    <button data-size="4:5"><span class="icon">☑️</span> 4 × 5</button>
+    <button data-size="5:4"><span class="icon">🔳</span> 5 × 4</button>
+    <button data-size="9:16"><span class="icon">📱</span> 9 × 16</button>
+    <button data-size="16:9"><span class="icon">🎞️</span> 16 × 9</button>
+  </div>
+</section>
+
+<!-- ────────── ИНФО ────────── -->
 <section id="page-info" class="hidden">
   <div class="grid">
     <button id="back-info" class="span-2"><span class="icon">⬅️</span> Назад</button>
   </div>
 
   <div class="info-wrap">
-    <h3>🧠 Нейро-образы — выбери стиль для генерации!</h3>
-    <p>После обучения агента по твоим 25 фото ты сможешь создавать изображения <strong>с твоим лицом</strong> в разных стилях. Вот что доступно:</p>
-    <p>👑 <strong>Мужской якутский костюм</strong> — традиционный национальный образ (для парней).<br>
-       👸 <strong>Женский якутский костюм</strong> — красивый этнический наряд (для девушек).<br>
-       💰 <strong>Миллиардер Vibe</strong> — роскошь, стиль, яхты и статус.<br>
-       🏖 <strong>На пляже</strong> — летняя атмосфера и релакс.<br>
-       📸 <strong>Фотосессия</strong> — студийный портрет, как в модном журнале.<br>
-       🖼 <strong>Портрет</strong> — классический художественный стиль.<br>
-       👶 <strong>Ребёнок</strong> — генерация с твоим лицом в образе ребёнка.</p>
-    <p><em>Начни с создания агента — мы обучим нейросеть, и ты сможешь выбирать любой стиль!</em></p>
+    <h3>🧠 Нейро‑образы — выбери стиль для генерации!</h3>
+    <p>После обучения агента по твоим 25 фото ты сможешь создавать изображения <strong>с твоим лицом</strong> в разных стилях.</p>
+    <p>👑 Мужской / 👸 Женский якутский костюм<br>
+       💰 Миллиардер Vibe · 🏖 На пляже<br>
+       📸 Фотосессия · 🖼 Портрет · 👶 Ребёнок</p>
   </div>
 </section>
 
-<!-- ────────────── ПОМОЩЬ ────────────── -->
+<!-- ────────── ПОМОЩЬ ────────── -->
 <section id="page-help" class="hidden">
   <div class="grid">
     <button id="back-help" class="span-2"><span class="icon">⬅️</span> Назад</button>
@@ -151,25 +165,14 @@
 
   <div class="info-wrap">
     <h3>📘 Помощь</h3>
-    <p>Добро пожаловать в <strong>Saga AI</strong> — бот, который создаёт персонального агента по твоим фоткам и генерит топовые образы 💫</p>
-
-    <p>🔧 <strong>Как это устроено</strong><br>
-       1. Загрузи <strong>25 фото лица</strong> («Создать агента»).<br>
-       2. Мы обучим нейросеть на твоём лице.<br>
-       3. Выбирай фильтр — получай реалистичные кадры с собой.</p>
-
-    <p>💳 <strong>Баланс</strong><br>
-       • 1 генерация = −1 баланс.<br>
-       • Пополняется через «Купить генерации».</p>
-
-    <p>📷 <strong>Лайфхаки</strong><br>
-       • Чёткие фото без жёстких фильтров — результат 🔥</p>
-
-    <p>❓ <strong>Вопросы?</strong> Пиши <a href="https://t.me/saga_ai" target="_blank">@saga_ai</a></p>
+    <p>Добро пожаловать в <strong>Saga AI</strong> — бот, который создаёт персонального агента по твоим фоткам и генерит топовые образы 💫</p>
+    <p>🔧 Сначала загрузи 25 фото лица («Создать агента»), затем выбирай фильтры или улучшай/увеличивай фото.</p>
+    <p>💳 1 генерация = −1 баланс. Пополняй через «Купить генерации».</p>
+    <p>❓ Вопросы? Пиши <a href="https://t.me/saga_ai" target="_blank">@saga_ai</a></p>
   </div>
 </section>
 
-<!-- ────────────── JS ────────────── -->
+<!-- ────────── JS ────────── -->
 <script>
 if (window.Telegram && Telegram.WebApp){
   Telegram.WebApp.ready();
@@ -182,6 +185,7 @@ const hide  = el => el.classList.add('hidden');
 
 const pageMain    = $('#page-main');
 const pageFilters = $('#page-filters');
+const pageResize  = $('#page-resize');
 const pageInfo    = $('#page-info');
 const pageHelp    = $('#page-help');
 
@@ -195,28 +199,42 @@ function send(action, payload = {}){
   }
 }
 
-$('#btnPhoto').onclick        = () => { hide(pageMain); show(pageFilters); };
-$('#btnVideo').onclick        = () => send('create_video');
+/* ── главные кнопки ── */
+$('#btnPhoto').onclick   = () => { hide(pageMain); show(pageFilters); };
+$('#btnVideo').onclick   = () => send('create_video');
 
-$('#btnAgent').onclick        = () => send('create_agent');
-$('#btnClothes').onclick      = () => window.location.href = 'main.html';
-$('#btnSwitchAgent').onclick  = () => send('change_agent');
+$('#btnAgent').onclick   = () => send('create_agent');
+$('#btnClothes').onclick = () => window.location.href = 'main.html';
+$('#btnSwitchAgent').onclick = () => send('change_agent');
 
-$('#btnFilters').onclick      = () => { hide(pageMain); show(pageInfo); };
-$('#btnBalance').onclick      = () => send('balance');
-$('#btnBuy').onclick          = () => send('buy_generations');
+$('#btnFilters').onclick = () => { hide(pageMain); show(pageInfo); };
+$('#btnBalance').onclick = () => send('balance');
+$('#btnBuy').onclick     = () => send('buy_generations');
 
-$('#btnEnhance').onclick      = () => send('enhance_photo');   // ✨ улучшение
-$('#btnHelp').onclick         = () => { hide(pageMain); show(pageHelp); };
+$('#btnEnhance').onclick = () => send('enhance_photo');
+$('#btnResize').onclick  = () => { hide(pageMain); show(pageResize); };
 
-$('#back-filters').onclick    = () => { show(pageMain); hide(pageFilters); };
-$('#back-info').onclick       = () => { show(pageMain); hide(pageInfo); };
-$('#back-help').onclick       = () => { show(pageMain); hide(pageHelp); };
+$('#btnHelp').onclick    = () => { hide(pageMain); show(pageHelp); };
 
+/* ── возврат ── */
+$('#back-filters').onclick = () => { show(pageMain); hide(pageFilters); };
+$('#back-resize').onclick  = () => { show(pageMain); hide(pageResize); };
+$('#back-info').onclick    = () => { show(pageMain); hide(pageInfo); };
+$('#back-help').onclick    = () => { show(pageMain); hide(pageHelp); };
+
+/* ── фильтры ── */
 pageFilters.querySelectorAll('button[data-filter]').forEach(btn => {
   btn.onclick = () => {
     send('generate_photo', { filter: btn.dataset.filter });
     show(pageMain); hide(pageFilters);
+  };
+});
+
+/* ── размеры ── */
+pageResize.querySelectorAll('button[data-size]').forEach(btn => {
+  btn.onclick = () => {
+    send('resize_photo', { size: btn.dataset.size });   // <─ ключевой вызов
+    show(pageMain); hide(pageResize);
   };
 });
 </script>
