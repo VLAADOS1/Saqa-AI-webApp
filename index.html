@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Photo Mini‑App</title>
+<title>AI Photo Mini‑App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root{
@@ -57,7 +57,7 @@
   .icon{font-size:1.4em;flex:0 0 auto}
   @media(max-width:380px){button{font-size:16px}}
 
-  #btnHelp,#btnEnhance,#btnResize,#btnErase{justify-content:center;text-align:center}
+  #btnHelp,#btnEnhance,#btnResize,#btnErase,#btnReplace{justify-content:center;text-align:center}
 
   .info-wrap{
     max-width:380px;width:100%;
@@ -82,6 +82,11 @@
   .draw-box img{display:block;max-width:100%;height:auto;border-radius:var(--radius)}
   .draw-box canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:var(--radius);touch-action:none}
   .tool-toggle{position:absolute;bottom:8px;right:8px;padding:6px 8px;background:#0009;border:0;border-radius:50%;backdrop-filter:blur(4px);cursor:pointer;color:#fff;font-size:18px;line-height:1}
+  textarea{
+    width:100%;padding:8px;border-radius:var(--radius);
+    border:1px solid rgba(255,255,255,.2);
+    background:#0004;color:#fff;font-size:16px;resize:vertical;
+  }
 </style>
 </head>
 <body>
@@ -98,7 +103,8 @@
     <button id="btnResize"><span class="icon">📐</span> Увеличить фото</button>
 
     <!-- 3‑й ряд -->
-    <button id="btnErase" class="span-2"><span class="icon">🧽</span> Удалить объект</button>
+    <button id="btnErase"><span class="icon">🧽</span> Удалить объект</button>
+    <button id="btnReplace"><span class="icon">🪄</span> Сменить объект</button>
 
     <!-- 4‑й ряд -->
     <button id="btnAgent"><span class="icon">🧬</span> Создать агента</button>
@@ -119,7 +125,7 @@
 
 <!-- остальные секции (filters, resize, info, help) оставлены без изменений -->
 
-<!-- ──── Модалки для удаления объекта ──── -->
+<!-- ──── Модалка для удаления объекта ──── -->
 <div class="modal" id="eraseModal">
   <div class="modal-box">
     <span class="close" id="eraseClose">&times;</span>
@@ -130,13 +136,30 @@
   </div>
 </div>
 
+<!-- ──── Модалка для смены объекта ──── -->
+<div class="modal" id="replaceModal">
+  <div class="modal-box">
+    <span class="close" id="replaceClose">&times;</span>
+    <div id="replaceContent">
+      <div style="margin-bottom:12px">
+        <label for="replacePrompt" style="display:block;margin-bottom:6px;font-size:16px">Введите промт</label>
+        <textarea id="replacePrompt" rows="3" placeholder="Опишите, чем заменить объект…"></textarea>
+      </div>
+      <button class="btn" id="replaceChoose">Выбрать фото</button>
+    </div>
+  </div>
+</div>
+
+<!-- ──── Общий модал‑холст для рисования ──── -->
 <div class="modal" id="drawModal">
   <div class="modal-box">
     <div id="drawContent"></div>
   </div>
 </div>
 
+<!-- скрытые input‑ы -->
 <input type="file" accept="image/*" id="eraseInput" hidden>
+<input type="file" accept="image/*" id="replaceInput" hidden>
 
 <!-- ────────── JS ────────── -->
 <script>
@@ -183,18 +206,12 @@ $('#back-help')   ?.addEventListener('click',()=>{ show(pageMain); hide(pageHelp
 
 /* выбор фильтра */
 pageFilters?.querySelectorAll('button[data-filter]').forEach(btn=>{
-  btn.onclick=()=>{
-    send('generate_photo',{filter:btn.dataset.filter});
-    show(pageMain); hide(pageFilters);
-  };
+  btn.onclick=()=>{ send('generate_photo',{filter:btn.dataset.filter}); show(pageMain); hide(pageFilters); };
 });
 
 /* выбор размера */
 pageResize?.querySelectorAll('button[data-size]').forEach(btn=>{
-  btn.onclick=()=>{
-    send('resize_photo',{size:btn.dataset.size});
-    show(pageMain); hide(pageResize);
-  };
+  btn.onclick=()=>{ send('resize_photo',{size:btn.dataset.size}); show(pageMain); hide(pageResize); };
 });
 
 /* ───────── delete object flow ───────── */
@@ -204,10 +221,20 @@ const eraseBtn    = $('#btnErase'),
       eraseImg    = $('#eraseImg'),
       eraseChoose = $('#eraseChoose'),
       eraseInput  = $('#eraseInput'),
+
+      replaceBtn    = $('#btnReplace'),
+      replaceModal  = $('#replaceModal'),
+      replaceClose  = $('#replaceClose'),
+      replacePrompt = $('#replacePrompt'),
+      replaceChoose = $('#replaceChoose'),
+      replaceInput  = $('#replaceInput'),
+
       drawModal   = $('#drawModal'),
       drawContent = $('#drawContent');
 
-let userPhotoFile=null;
+let userPhotoFile=null,
+    userReplaceFile=null,
+    userReplacePrompt='';
 
 /* upload helper */
 async function uploadFile(fileOrBlob,name){
@@ -226,33 +253,49 @@ async function uploadFile(fileOrBlob,name){
   throw new Error('upload failed');
 }
 
-/* open choose photo */
+/* open choose photo — delete */
 eraseBtn.onclick=()=>{eraseImg.src=''; eraseModal.classList.add('active');};
 eraseClose.onclick=()=>eraseModal.classList.remove('active');
-eraseModal.addEventListener('click',e=>{
-  if(e.target===eraseModal) eraseModal.classList.remove('active');
-});
+eraseModal.addEventListener('click',e=>{ if(e.target===eraseModal) eraseModal.classList.remove('active'); });
 eraseChoose.onclick=()=>eraseInput.click();
 
-/* photo selected */
+/* open modal — replace */
+replaceBtn.onclick=()=>{ replacePrompt.value=''; replaceModal.classList.add('active'); };
+replaceClose.onclick=()=>replaceModal.classList.remove('active');
+replaceModal.addEventListener('click',e=>{ if(e.target===replaceModal) replaceModal.classList.remove('active'); });
+replaceChoose.onclick=()=>{
+  if(!replacePrompt.value.trim()){ alert('Промт обязателен 😊'); return; }
+  replaceInput.click();
+};
+
+/* photo selected — delete */
 eraseInput.onchange=e=>{
   const file=e.target.files[0]; if(!file) return;
   userPhotoFile=file;
   const fr=new FileReader();
-  fr.onload=ev=>{
-    eraseModal.classList.remove('active');
-    startDrawMode(ev.target.result);
-  };
+  fr.onload=ev=>{ eraseModal.classList.remove('active'); startDrawMode(ev.target.result,'erase'); };
   fr.readAsDataURL(file);
 };
 
-/* draw mode */
-function startDrawMode(src){
+/* photo selected — replace */
+replaceInput.onchange=e=>{
+  const file=e.target.files[0]; if(!file) return;
+  userReplaceFile=file;
+  userReplacePrompt=replacePrompt.value.trim();
+  const fr=new FileReader();
+  fr.onload=ev=>{ replaceModal.classList.remove('active'); startDrawMode(ev.target.result,'replace'); };
+  fr.readAsDataURL(file);
+};
+
+/* draw mode (shared) */
+function startDrawMode(src,mode){
   drawContent.innerHTML='';
   drawModal.classList.add('active');
 
   drawContent.insertAdjacentHTML('beforeend',
-    '<div class="instructions">Обведи объект для удаления (🧽 / 🖍️ переключатель ластик).</div>');
+    '<div class="instructions">Обведи объект для '+
+      (mode==='erase'?'удаления':'замены')+
+      ' (<span style="white-space:nowrap">🧽 / 🖍️</span> — переключатель ластик).</div>');
 
   const box=document.createElement('div'); box.className='draw-box';
   const img=document.createElement('img'); img.src=src;
@@ -266,11 +309,8 @@ function startDrawMode(src){
   const done=document.createElement('button'); done.className='btn'; done.textContent='Готово';
   done.style.marginTop='16px'; drawContent.append(done);
 
-  img.onload=()=>{
-    cv.width = img.clientWidth;
-    cv.height= img.clientHeight;
+  img.onload=()=>{ cv.width=img.clientWidth; cv.height=img.clientHeight;
     const ctx=cv.getContext('2d');
-
     initDrawing(cv,ctx,()=>eraser);
   };
 
@@ -278,10 +318,15 @@ function startDrawMode(src){
     drawContent.innerHTML='<div class="instructions">⏳ Загружаем…</div>';
     try{
       const maskDataUrl=makeMask(cv,img.naturalWidth,img.naturalHeight);
-      const photoURL   =await uploadFile(userPhotoFile,'photo_'+Date.now()+'.png');
-      const maskBlob   =await (await fetch(maskDataUrl)).blob();
-      const maskURL    =await uploadFile(maskBlob,'mask_'+Date.now()+'.png');
-      send('erase_object',{photo:photoURL,mask:maskURL});
+      const photoFile = mode==='erase'?userPhotoFile:userReplaceFile;
+      const photoURL  = await uploadFile(photoFile,'photo_'+Date.now()+'.png');
+      const maskBlob  = await (await fetch(maskDataUrl)).blob();
+      const maskURL   = await uploadFile(maskBlob,'mask_'+Date.now()+'.png');
+      if(mode==='erase'){
+        send('erase_object',{photo:photoURL,mask:maskURL});
+      }else{
+        send('change_object',{prompt:userReplacePrompt,photo:photoURL,mask:maskURL});
+      }
       drawContent.innerHTML='<div class="instructions">✅ Отправлено боту!</div>';
     }catch{
       drawContent.innerHTML='<div class="instructions" style="color:#f55">Ошибка загрузки</div>';
@@ -340,9 +385,7 @@ function makeMask(srcCanvas,nw,nh){
 }
 
 /* close draw modal click outside */
-drawModal.addEventListener('click',e=>{
-  if(e.target===drawModal) drawModal.classList.remove('active');
-});
+drawModal.addEventListener('click',e=>{ if(e.target===drawModal) drawModal.classList.remove('active'); });
 </script>
 </body>
 </html>
