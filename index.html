@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Photo Mini‑App</title>
+<title>AI Photo / Video Mini‑App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
@@ -68,7 +68,7 @@ button:hover{background:var(--violet-light)}
 .icon{font-size:1.4em;flex:0 0 auto}
 @media(max-width:380px){button{font-size:16px}}
 
-#btnHelp,#btnEnhance,#btnResize,#btnErase,#btnReplace{justify-content:center;text-align:center}
+#btnHelp,#btnEnhance,#btnEnhanceVideo,#btnResize,#btnErase,#btnReplace{justify-content:center;text-align:center}
 
 /* ───────── инфо‑карточки ───────── */
 .info-wrap{
@@ -106,7 +106,7 @@ button:hover{background:var(--violet-light)}
   position:relative;
   text-align:center;
 }
-.modal-box img{
+.modal-box img, .modal-box video{
   max-width:100%;
   border-radius:var(--radius);
   display:block;
@@ -171,6 +171,7 @@ textarea{
 
     <!-- 2‑й ряд -->
     <button id="btnEnhance"><span class="icon">✨</span> Улучшить фото</button>
+    <button id="btnEnhanceVideo"><span class="icon">💫</span> Улучшить видео</button>
     <button id="btnResize"><span class="icon">📐</span> Увеличить фото</button>
 
     <!-- 3‑й ряд -->
@@ -257,6 +258,16 @@ textarea{
   </div>
 </div>
 
+<!-- ──── Модалка «Улучшить видео» ──── -->
+<div class="modal" id="videoEnhanceModal">
+  <div class="modal-box">
+    <span class="close" id="videoEnhanceClose">&times;</span>
+    <div id="videoEnhanceContent">
+      <button class="btn" id="videoEnhanceChoose">Выбрать видео (до 100 МБ)</button>
+    </div>
+  </div>
+</div>
+
 <!-- ──── Общий холст для рисования маски ──── -->
 <div class="modal" id="drawModal">
   <div class="modal-box">
@@ -267,6 +278,7 @@ textarea{
 <!-- ──── скрытые input‑ы для файлов ──── -->
 <input type="file" accept="image/*" id="eraseInput" hidden>
 <input type="file" accept="image/*" id="replaceInput" hidden>
+<input type="file" accept="video/*" id="enhanceVideoInput" hidden>
 
 <!-- ────────── JS ────────── -->
 <script>
@@ -307,7 +319,7 @@ $('#btnEnhance').onclick = () => send('enhance_photo');
 $('#btnResize').onclick  = () => { hide(pageMain); show(pageResize); };
 $('#btnHelp').onclick    = () => { hide(pageMain); show(pageHelp); };
 
-/* ── назад ── */
+/* ── back buttons ── */
 $('#back-filters')?.addEventListener('click',()=>{ show(pageMain); hide(pageFilters); });
 $('#back-resize') ?.addEventListener('click',()=>{ show(pageMain); hide(pageResize); });
 $('#back-info')   ?.addEventListener('click',()=>{ show(pageMain); hide(pageInfo); });
@@ -347,8 +359,8 @@ const eraseBtn      = $('#btnErase'),
       drawModal   = $('#drawModal'),
       drawContent = $('#drawContent');
 
-let userPhotoFile     = null,  // для erase
-    userReplaceFile   = null,  // для replace
+let userPhotoFile     = null,  // for erase
+    userReplaceFile   = null,  // for replace
     userReplacePrompt = '';
 
 /* ── загрузка файла на временный хост ── */
@@ -423,6 +435,44 @@ replaceInput.onchange = e => {
     startDrawMode(ev.target.result,'replace');
   };
   fr.readAsDataURL(file);
+};
+
+/* ───────── enhance video flow ───────── */
+const enhanceVideoBtn      = $('#btnEnhanceVideo'),
+      videoEnhanceModal    = $('#videoEnhanceModal'),
+      videoEnhanceClose    = $('#videoEnhanceClose'),
+      videoEnhanceContent  = $('#videoEnhanceContent'),
+      enhanceVideoInput    = $('#enhanceVideoInput');
+
+/* ── открыть модалку “Улучшить видео” ── */
+enhanceVideoBtn.onclick = () => {
+  videoEnhanceContent.innerHTML = '<button class="btn" id="videoEnhanceChoose">Выбрать видео (до 100 МБ)</button>';
+  videoEnhanceModal.classList.add('active');
+  $('#videoEnhanceChoose').onclick = () => enhanceVideoInput.click();
+};
+
+videoEnhanceClose.onclick = () => videoEnhanceModal.classList.remove('active');
+videoEnhanceModal.addEventListener('click',e=>{
+  if(e.target === videoEnhanceModal) videoEnhanceModal.classList.remove('active');
+});
+
+/* ── файл выбран (enhance video) ── */
+enhanceVideoInput.onchange = async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 100 * 1024 * 1024){
+    alert('Размер видео превышает 100 МБ 😥');
+    return;
+  }
+  videoEnhanceContent.innerHTML = '<div class="instructions">⏳ Загружаем…</div>';
+  try{
+    const ext = file.name.split('.').pop() || 'mp4';
+    const videoURL = await uploadFile(file,'video_'+Date.now()+'.'+ext);
+    send('enhance_video',{video:videoURL});
+    videoEnhanceContent.innerHTML = '<div class="instructions">✅ Отправлено боту!</div>';
+  }catch(err){
+    videoEnhanceContent.innerHTML = '<div class="instructions" style="color:#f55">Ошибка загрузки</div>';
+  }
 };
 
 /* ───────── главный draw‑pipeline ───────── */
@@ -516,8 +566,6 @@ function initDrawing(cv,ctx,isEraser){
       ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
       ctx.restore();
     }else{
-      /* “двойной” мазок: сначала вычищаем, затем рисуем цвет поверх,
-         чтобы края оставались резкими */
       ctx.save();
       ctx.globalCompositeOperation = 'destination-out';
       ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke();
@@ -541,9 +589,7 @@ function initDrawing(cv,ctx,isEraser){
   window.addEventListener('touchend',stop);
 }
 
-/* ── генератор итоговой PNG‑маски ──
-   invert=false  → чёрный фон, белый объект (удалить)
-   invert=true   → белый фон, чёрный объект (сменить) */
+/* ── генератор итоговой PNG‑маски ── */
 function makeMask(srcCanvas,nw,nh,invert=false){
   const m  = document.createElement('canvas');
   m.width  = nw; m.height = nh;
